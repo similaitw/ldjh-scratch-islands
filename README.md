@@ -1,5 +1,7 @@
 # Scratch 積木群島
 
+網站：https://ldjh-scratch-islands.vercel.app
+
 十座虛擬島嶼，依資訊課的學習順序認識 Scratch 九大積木類別：事件、動作、外觀、音效、迴圈、偵測、運算、變數與列表、判斷、函式積木。
 
 - 3D 群島地圖（Three.js），點島飛入，搭船、飛機、熱氣球跳島
