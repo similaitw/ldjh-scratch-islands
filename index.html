@@ -249,6 +249,41 @@ button .tc i{box-shadow:0 0 0 1px rgba(0,0,0,.25)}
   .dlg{bottom:44px}
 }
 @media (prefers-reduced-motion:reduce){.toast{animation:none}}
+
+/* ---------- 分區與待完成標示 ---------- */
+.zones{position:sticky;top:-18px;z-index:5;margin:0 -18px;padding:10px 18px 12px;background:var(--surface);border-bottom:1px solid var(--line);box-shadow:0 6px 10px -8px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:8px}
+@media (max-width:959px),(max-height:559px){.zones{top:0}}
+.zones-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 10px;font-size:.82rem;color:var(--muted)}
+.zones-head b{color:var(--fg);font-size:.95rem}
+.zones .tabs{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:6px}
+.zones .tabs button{display:flex;flex-direction:column;align-items:stretch;gap:5px;text-align:left;padding:7px 9px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--fg);font-weight:600;font-size:.86rem}
+.zones .tabs button[aria-selected="true"]{border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,var(--surface));color:var(--fg)}
+.zt{display:flex;align-items:center;gap:6px;min-width:0}
+.zn{font-style:normal;flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:.75rem;font-weight:700;background:var(--line);color:var(--fg)}
+.tabs button[aria-selected="true"] .zn{background:var(--c);color:#fff}
+.tabs button.zdone .zn{background:var(--ok);color:#fff}
+.tn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zb{display:flex;align-items:center;gap:6px}
+.zb em{flex:1;height:5px;border-radius:999px;background:var(--line);overflow:hidden}
+.zb s{display:block;height:100%;width:0;background:var(--c);text-decoration:none;transition:width .4s}
+.tabs button.zdone .zb s{background:var(--ok)}
+.zones .tabs .tp{margin:0;font-size:.72rem;opacity:1;color:var(--muted);min-width:2.6em;text-align:right}
+.tabs button.zdone .tp{color:var(--ok)}
+.tabs button.zpart:not([aria-selected="true"]){border-color:var(--warn-line)}
+.h3s{margin-left:auto;font-size:.72rem;font-weight:700;border-radius:999px;padding:1px 8px}
+.h3s.todo{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-line)}
+.h3s.ok{color:var(--ok);background:transparent;border:1px solid transparent}
+.zonebox{border:2px solid var(--warn-line);background:var(--warn-bg);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.zonebox.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,var(--surface))}
+.zb-h b{font-size:.98rem}
+.zb-miss{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:.88rem}
+.chipbtn{background:var(--surface);color:var(--warn);border:1px solid var(--warn-line);border-radius:999px;padding:3px 10px;font-size:.82rem;font-weight:700}
+.chipbtn:hover{background:var(--warn-bg)}
+.zone-go{align-self:flex-start;font-size:1rem;padding:10px 18px}
+.todo-list{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+@keyframes flash{0%{box-shadow:0 0 0 0 var(--warn)}30%{box-shadow:0 0 0 6px var(--warn-line)}100%{box-shadow:0 0 0 0 transparent}}
+.flash{animation:flash 1.4s ease-out;border-radius:12px}
+@media (prefers-reduced-motion:reduce){.flash{animation:none;outline:3px solid var(--warn)}}
 </style>
 </head>
 <body>
@@ -935,7 +970,7 @@ function renderPanel(idx){
   const it=ISLANDS[idx], ti=topicSel[it.id]||0, tp=it.topics[ti], qz=tp.quest, isDone=s=>!!done[ck(it,tp,s)];
   const nxt=ISLANDS[idx+1];
   panel.style.setProperty('--c',it.c); panel.style.setProperty('--cd',it.cd);
-  const h3=(s,title)=>`<h3>${title||SEC_NAME[s]}<span class="h3s" data-h="${s}">${isDone(s)?'✓':''}</span></h3>`;
+  const h3=(s,title)=>`<h3>${title||SEC_NAME[s]}<span class="h3s ${isDone(s)?'ok':'todo'}" data-h="${s}">${isDone(s)?'✓ 完成':'待完成'}</span></h3>`;
   panel.innerHTML=`
     <div class="ihead"><div class="chip"><i></i>第 ${idx+1} 站 · ${it.region} · 共 ${ISLANDS.length} 站</div><h2>${it.name}</h2>
       <div class="prow"><div class="pbar" aria-label="本島進度"><i id="ibar"></i></div><span class="pct" id="ipct"></span></div></div>
@@ -943,15 +978,16 @@ function renderPanel(idx){
     <p>${it.lead}</p>
     <div class="learn">${it.learn.map(x=>`<span>${x}</span>`).join('')}</div>
     <div class="sights"><h3>島上風景</h3><ul class="pts">${it.sights.map(x=>`<li>${x}</li>`).join('')}</ul></div>
-    ${it.topics.length>1?`<div class="tabs" role="tablist">${it.topics.map((t,k)=>`<button type="button" role="tab" aria-selected="${k===ti}" data-k="${k}">${t.name}<span class="tp" data-tp="${k}"></span></button>`).join('')}</div>`:''}
-    ${tp.concept?`<div>${h3('concept')}<ul class="pts">${tp.concept.map(x=>`<li>${x}</li>`).join('')}</ul>${gotBtn('concept',isDone('concept'))}</div>`:''}
-    <div>${h3('blocks',it.topics.length>1?tp.name+'的積木':'島上的積木')}
+    ${it.topics.length>1?`<div class="zones"><div class="zones-head"><b>這座島有 ${it.topics.length} 個區域</b><span>每一區都完成，才算學完這座島</span></div>
+      <div class="tabs" role="tablist">${it.topics.map((t,k)=>`<button type="button" role="tab" aria-selected="${k===ti}" data-k="${k}"><span class="zt"><i class="zn" data-zn="${k}">${k+1}</i><span class="tn">${t.name}</span></span><span class="zb"><em><s data-zb="${k}"></s></em><span class="tp" data-tp="${k}"></span></span></button>`).join('')}</div></div>`:''}
+    ${tp.concept?`<div data-sec="concept">${h3('concept')}<ul class="pts">${tp.concept.map(x=>`<li>${x}</li>`).join('')}</ul>${gotBtn('concept',isDone('concept'))}</div>`:''}
+    <div data-sec="blocks">${h3('blocks',it.topics.length>1?tp.name+'的積木':'島上的積木')}
       <div class="blocks">${tp.blocks.map(([b,d])=>`<div class="brow">${b}<small>${d}</small></div>`).join('')}</div>${gotBtn('blocks',isDone('blocks'))}</div>
-    ${tp.example?`<div>${h3('example')}<div class="script">${tp.example.script.join('')}</div><ol class="steps">${tp.example.steps.map(s=>`<li>${s}</li>`).join('')}</ol>${gotBtn('example',isDone('example'))}</div>`:''}
-    ${tp.code?`<div>${h3('code','換成文字程式語言')}<div class="codebox"><div class="langs" role="tablist"><button type="button" role="tab" data-l="py" aria-selected="${lang==='py'}">Python</button><button type="button" role="tab" data-l="js" aria-selected="${lang==='js'}">JavaScript</button></div><pre><code>${hl(tp.code[lang])}</code></pre></div>${gotBtn('code',isDone('code'))}</div>`:''}
+    ${tp.example?`<div data-sec="example">${h3('example')}<div class="script">${tp.example.script.join('')}</div><ol class="steps">${tp.example.steps.map(s=>`<li>${s}</li>`).join('')}</ol>${gotBtn('example',isDone('example'))}</div>`:''}
+    ${tp.code?`<div data-sec="code">${h3('code','換成文字程式語言')}<div class="codebox"><div class="langs" role="tablist"><button type="button" role="tab" data-l="py" aria-selected="${lang==='py'}">Python</button><button type="button" role="tab" data-l="js" aria-selected="${lang==='js'}">JavaScript</button></div><pre><code>${hl(tp.code[lang])}</code></pre></div>${gotBtn('code',isDone('code'))}</div>`:''}
     ${tp.oops?`<div><h3>常見錯誤</h3><ul class="oops">${tp.oops.map(o=>`<li>${o}</li>`).join('')}</ul></div>`:''}
     <div class="tip"><b>小技巧</b>　${tp.tip}</div>
-    <form class="quest" id="quest">
+    <form class="quest" id="quest" data-sec="quest">
       ${h3('quest')}
       <div class="q">${qz.q}</div>
       ${qz.choices
@@ -959,6 +995,7 @@ function renderPanel(idx){
         : `<div class="ans"><input id="answer-${it.id}-${tp.id}" autocomplete="off" placeholder="輸入答案" aria-label="答案"><button type="submit">檢查</button><button type="button" class="ghost" id="hintBtn">提示</button></div>`}
       <div class="fb" id="fb">${isDone('quest')?'<span style="color:var(--ok)">✓ 這個任務已完成</span>':''}</div>
     </form>
+    <div id="zoneNext"></div>
     <div class="nav">${idx>0?`<button type="button" class="ghost" id="prev">← 回上一站</button>`:''}${nxt?`<button type="button" id="next"></button>`:''}</div>`;
 
   const fb=panel.querySelector('#fb');
@@ -995,17 +1032,39 @@ function renderPanel(idx){
 }
 
 const leftOf=it=>it.topics.flatMap(t=>secsOf(t).filter(s=>!done[ck(it,t,s)]).map(s=>(it.topics.length>1?t.name+'・':'')+SEC_NAME[s]));
+function goSec(idx,k,sec){
+  const it=ISLANDS[idx]; topicSel[it.id]=k; renderPanel(idx);
+  const el=sec?panel.querySelector(`[data-sec="${sec}"]`):panel.querySelector('.zones');
+  if(el){ el.scrollIntoView({behavior:reduce?'auto':'smooth',block:sec?'center':'start'}); if(sec){ el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); } }
+}
+const leftItems=it=>it.topics.flatMap((t,k)=>secsOf(t).filter(s=>!done[ck(it,t,s)]).map(s=>({k,s,label:(it.topics.length>1?t.name+'・':'')+SEC_NAME[s]})));
 function refreshPanelProgress(idx){
   const it=ISLANDS[idx], ti=topicSel[it.id]||0, tp=it.topics[ti], p=P(islandPct(it));
   panel.querySelector('#ibar').style.width=p+'%'; panel.querySelector('#ipct').textContent=p+'%';
-  panel.querySelectorAll('.tabs .tp').forEach(el=>{ const t=it.topics[+el.dataset.tp]; el.textContent=P(topicPct(it,t))+'%'; });
-  secsOf(tp).forEach(s=>{ const h=panel.querySelector(`[data-h="${s}"]`); if(h) h.textContent=done[ck(it,tp,s)]?'✓':''; });
+  panel.querySelectorAll('.tabs .tp').forEach(el=>{ const k=+el.dataset.tp, q=P(topicPct(it,it.topics[k])); el.textContent=q>=100?'完成':q+'%';
+    panel.querySelector(`[data-zb="${k}"]`).style.width=q+'%'; const zn=panel.querySelector(`[data-zn="${k}"]`); zn.textContent=q>=100?'✓':k+1;
+    el.closest('button').classList.toggle('zdone',q>=100); el.closest('button').classList.toggle('zpart',q>0&&q<100); });
+  secsOf(tp).forEach(s=>{ const h=panel.querySelector(`[data-h="${s}"]`); if(!h) return; const d=!!done[ck(it,tp,s)]; h.textContent=d?'✓ 完成':'待完成'; h.className='h3s '+(d?'ok':'todo'); });
+  const zn=panel.querySelector('#zoneNext');
+  if(zn){
+    if(it.topics.length<2) zn.innerHTML='';
+    else {
+      const tpP=P(topicPct(it,tp)), nk=ti+1<it.topics.length?ti+1:null, others=it.topics.map((t,k)=>({t,k})).filter(o=>o.k!==ti&&topicPct(it,o.t)<1);
+      const miss=secsOf(tp).filter(s=>!done[ck(it,tp,s)]);
+      zn.innerHTML=`<div class="zonebox${tpP>=100?' ok':''}"><div class="zb-h"><b>第 ${ti+1} / ${it.topics.length} 區「${tp.name}」${tpP>=100?'完成 ✓':`還沒完成（${tpP}%）`}</b></div>
+        ${miss.length?`<div class="zb-miss">還差：${miss.map(s=>`<button type="button" class="chipbtn" data-go="${ti}:${s}">${SEC_NAME[s]}</button>`).join('')}</div>`:''}
+        ${nk!==null?`<button type="button" class="zone-go" data-go="${nk}:">下一區：${it.topics[nk].name} →</button>`
+          :others.length?`<div class="zb-miss">這座島還有 ${others.length} 個區域沒完成：${others.map(o=>`<button type="button" class="chipbtn" data-go="${o.k}:">${o.t.name}</button>`).join('')}</div>`:''}</div>`;
+      zn.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{ const [k,sec]=b.dataset.go.split(':'); goSec(idx,+k,sec||null); });
+    }
+  }
   const fin=panel.querySelector('#finish'), nxt=ISLANDS[idx+1];
   if(p>=100){
     fin.innerHTML=`<div class="finish"><b>${it.name}學完了！</b>${nxt?`<span>下一站是第 ${idx+2} 站「${nxt.name}」（${nxt.region}），這段路搭${RIDE[it.ride]}。</span><div class="nav"><button type="button" id="goNext">出發，前往${nxt.name}</button></div>`:'<span>十站全部完成，你已經環遊 Scratch 世界一圈了。</span>'}</div>`;
     const g=fin.querySelector('#goNext'); if(g) g.addEventListener('click',()=>request(idx+1));
   } else {
-    fin.innerHTML=`<div class="warnbox"><b>⚠ 本島尚未完成（${p}%）</b><ul>${leftOf(it).map(x=>`<li>${x}</li>`).join('')}</ul><span>每段按「我看懂了」、答對島長任務，就能完成。</span></div>`;
+    fin.innerHTML=`<div class="warnbox"><b>⚠ 本島尚未完成（${p}%）</b><div class="todo-list">${leftItems(it).map(o=>`<button type="button" class="chipbtn" data-go="${o.k}:${o.s}">${o.label}</button>`).join('')}</div><span>點上面的項目可以直接跳過去。每段按「我看懂了」、答對島長任務，就能完成。</span></div>`;
+    fin.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{ const [k,sec]=b.dataset.go.split(':'); goSec(idx,+k,sec); });
   }
   const nb=panel.querySelector('#next');
   if(nb){ nb.classList.toggle('warnbtn',p<100); nb.textContent=(p<100?'⚠ 未完成・':'')+`搭${RIDE[it.ride]}前往第 ${idx+2} 站 ${nxt.name} →`; }
