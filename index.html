@@ -161,7 +161,12 @@ button.ghost{background:transparent;color:var(--fg);border-color:var(--line)}
 [hidden]{display:none!important}
 .modal{position:fixed;inset:0;z-index:5000;background:rgba(10,25,30,.45);display:flex;align-items:center;justify-content:center;
   padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
-.modal .card{background:var(--surface);color:var(--fg);border-radius:18px;border-top:6px solid var(--c);padding:18px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:10px}
+.modal .card{background:var(--surface);color:var(--fg);border-radius:18px;border-top:6px solid var(--c);padding:18px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:10px;max-height:calc(100dvh - 32px);overflow:auto;box-sizing:border-box}
+#mBody{max-height:min(52dvh,420px);overflow:auto;overscroll-behavior:contain}
+.lsum{margin:4px 0 6px;padding-left:1.2em}
+.lsum li{margin:2px 0}
+.lsum .more{list-style:none;margin-left:-1.2em;color:var(--muted)}
+p.lsum{padding:0}
 .modal h3{margin:0;font-size:1.15rem}
 .modal p{margin:0}
 .modal .mbar{flex:none}
@@ -1033,6 +1038,14 @@ function renderPanel(idx){
 }
 
 const leftOf=it=>it.topics.flatMap(t=>secsOf(t).filter(s=>!done[ck(it,t,s)]).map(s=>(it.topics.length>1?t.name+'・':'')+SEC_NAME[s]));
+// 依區域合併：每區一筆 {k,name,miss:[...],all}
+const leftZones=it=>it.topics.map((t,k)=>{ const ss=secsOf(t), miss=ss.filter(s=>!done[ck(it,t,s)]); return {k,name:t.name,miss,all:miss.length===ss.length}; }).filter(z=>z.miss.length);
+function leftSummary(it,max=4){
+  const zs=leftZones(it), multi=it.topics.length>1;
+  if(!multi) return zs.length?`<p class="lsum">${zs[0].miss.map(s=>SEC_NAME[s]).join('、')}</p>`:'';
+  const rows=zs.slice(0,max).map(z=>`<li><b>${z.name}</b>：${z.all?'還沒開始':z.miss.map(s=>SEC_NAME[s]).join('、')}</li>`).join('');
+  return `<ul class="lsum">${rows}${zs.length>max?`<li class="more">…還有 ${zs.length-max} 區沒完成</li>`:''}</ul>`;
+}
 function goSec(idx,k,sec){
   const it=ISLANDS[idx]; topicSel[it.id]=k; renderPanel(idx);
   const el=sec?panel.querySelector(`[data-sec="${sec}"]`):panel.querySelector('.zones');
@@ -1064,7 +1077,9 @@ function refreshPanelProgress(idx){
     fin.innerHTML=`<div class="finish"><b>${it.name}學完了！</b>${nxt?`<span>下一站是第 ${idx+2} 站「${nxt.name}」（${nxt.region}），這段路搭${RIDE[it.ride]}。</span><div class="nav"><button type="button" id="goNext">出發，前往${nxt.name}</button></div>`:'<span>十站全部完成，你已經環遊 Scratch 世界一圈了。</span>'}</div>`;
     const g=fin.querySelector('#goNext'); if(g) g.addEventListener('click',()=>request(idx+1));
   } else {
-    fin.innerHTML=`<div class="warnbox"><b>⚠ 本島尚未完成（${p}%）</b><div class="todo-list">${leftItems(it).map(o=>`<button type="button" class="chipbtn" data-go="${o.k}:${o.s}">${o.label}</button>`).join('')}</div><span>點上面的項目可以直接跳過去。每段按「我看懂了」、答對島長任務，就能完成。</span></div>`;
+    fin.innerHTML=`<div class="warnbox"><b>⚠ 本島尚未完成（${p}%）</b><div class="todo-list">${it.topics.length>1
+      ? leftZones(it).map(z=>`<button type="button" class="chipbtn" data-go="${z.k}:${z.miss[0]}">${z.name}（${z.all?'還沒開始':'還差 '+z.miss.length+' 項'}）</button>`).join('')
+      : leftItems(it).map(o=>`<button type="button" class="chipbtn" data-go="${o.k}:${o.s}">${o.label}</button>`).join('')}</div><span>點上面的項目可以直接跳過去。每段按「我看懂了」、答對島長任務，就能完成。</span></div>`;
     fin.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{ const [k,sec]=b.dataset.go.split(':'); goSec(idx,+k,sec); });
   }
   const nb=panel.querySelector('#next');
@@ -1095,7 +1110,7 @@ function request(j){
   const go=()=>travel(current,j);
   if(p<100){
     ask({warn:true, title:`⚠ 警告：${cur.name}還沒學完（${p}%）`,
-      body:`<b>還差：</b><ul>${leftOf(cur).map(x=>`<li>${x}</li>`).join('')}</ul>後面的島會用到這裡的觀念，建議學到 100% 再出發。${skipped.length?`<br><b>前面也還沒學完：</b>${skipped.join('、')}`:''}`,
+      body:`<b>還差：</b>${leftSummary(cur)}後面的島會用到這裡的觀念，建議學到 100% 再出發。${skipped.length?`<br><b>前面也還沒學完：</b>${skipped.join('、')}`:''}`,
       pct:p, stay:`留在${cur.name}繼續學`, go:'仍然出發', color:[cur.c,cur.cd]}, go);
   } else if(j>current+1 || skipped.length){
     ask({warn:true, title:`⚠ 要跳到第 ${j+1} 站「${tgt.name}」嗎？`,
