@@ -1,0 +1,1144 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="十座虛擬島嶼，依資訊課順序學 Scratch 九大積木類別。">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Scratch 積木群島</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: 3D hex archipelago (one island per Scratch category, joined by a learning route) beside a long-form island guide */
+:root{
+  --bg:#eef5f4; --surface:#ffffff; --fg:#1f2d33; --muted:#5b6d73; --line:#d3e2e0; --well:#e6efed; --code:#f3f7f6;
+  --sea:#bfe3ea; --sea-deep:#8cc9d6; --sand:#f1dfb3; --grass:#8fcf6b; --cliff:#c9a77a;
+  --slot:#ffffff; --slot-text:#3b3b3b;
+  --accent:#ff8c1a; --ok:#2e9e5b; --bad:#d6453d; --kw:#7a3fd1; --str:#2b8a3e; --cm:#7b8b8f;
+  --display:"Fredoka","Noto Sans TC",system-ui,sans-serif;
+  --body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1c22; --surface:#16272e; --fg:#e4efee; --muted:#9db3b6; --line:#28414a; --well:#0f1c22; --code:#0c171c;
+  --sea:#123845; --sea-deep:#0b2a35; --sand:#bfa978; --grass:#5f9e4a; --cliff:#8a7254;
+  --slot:#f2f5f3; --slot-text:#2a2a2a; --accent:#ffa64d; --ok:#5cc98a; --bad:#f07a72; --kw:#c49bff; --str:#7fd492; --cm:#7f9599;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1c22; --surface:#16272e; --fg:#e4efee; --muted:#9db3b6; --line:#28414a; --well:#0f1c22; --code:#0c171c;
+  --sea:#123845; --sea-deep:#0b2a35; --sand:#bfa978; --grass:#5f9e4a; --cliff:#8a7254;
+  --slot:#f2f5f3; --slot-text:#2a2a2a; --accent:#ffa64d; --ok:#5cc98a; --bad:#f07a72; --kw:#c49bff; --str:#7fd492; --cm:#7f9599;
+  color-scheme:dark}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--body);font-size:15px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 40px}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 16px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(1.5rem,4.5vw,2.2rem);margin:0;line-height:1.15;text-wrap:balance}
+.sub{margin:2px 0 0;color:var(--muted);font-size:.92rem;max-width:62ch}
+.progress{font-family:var(--display);font-weight:600;color:var(--muted);font-size:.95rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.progress b{color:var(--accent)}
+.swatches{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+.swatches i{width:18px;height:8px;border-radius:4px;display:block}
+
+.main{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:960px){.main{grid-template-columns:minmax(0,1.7fr) minmax(360px,1fr);align-items:start}}
+.stage{position:relative;height:min(60vh,580px);min-height:360px;border-radius:18px;overflow:hidden;background:var(--sea);touch-action:none;border:1px solid var(--line)}
+@media (min-width:960px){.stage{height:calc(100vh - 32px);max-height:900px;position:sticky;top:16px}}
+.stage canvas{display:block;width:100%;height:100%;cursor:grab}
+.stage canvas:active{cursor:grabbing}
+.labels{position:absolute;inset:0;pointer-events:none}
+.lbl{position:absolute;transform:translate(-50%,-100%);pointer-events:auto;cursor:pointer;white-space:nowrap;
+  font-family:var(--body);font-weight:700;font-size:12.5px;line-height:1.5;background:var(--surface);color:var(--fg);
+  border:2px solid var(--c);padding:1px 9px;border-radius:999px;box-shadow:0 2px 0 var(--line)}
+.lbl.on{background:var(--c);color:#fff;border-color:var(--cd);box-shadow:0 2px 0 var(--cd)}
+.lbl .n{opacity:.6;margin-right:4px;font-variant-numeric:tabular-nums}
+.lbl .done{color:var(--accent);margin-left:4px;font-variant-numeric:tabular-nums}
+.lbl.on .done{color:#fff}
+@media (max-width:520px){.lbl{font-size:11px;padding:0 7px}}
+.hint{position:absolute;left:12px;bottom:10px;font-size:12px;color:var(--fg);opacity:.75;pointer-events:none}
+.overview{position:absolute;top:10px;left:10px;font-size:13px;padding:6px 12px;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:999px;box-shadow:0 2px 0 var(--line)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px 18px 22px;display:flex;flex-direction:column;gap:18px;min-width:0;border-top:6px solid var(--c)}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;letter-spacing:.08em;font-weight:700;color:var(--muted)}
+.chip i{width:12px;height:12px;border-radius:50%;background:var(--c);display:block}
+.panel h2{font-family:var(--display);font-size:1.6rem;margin:2px 0 0;line-height:1.2;text-wrap:balance}
+.panel h3{font-size:1.02rem;margin:0 0 6px;font-weight:900;display:flex;align-items:center;gap:8px}
+.panel h3::before{content:"";width:6px;height:18px;border-radius:3px;background:var(--c)}
+.panel p{margin:0 0 8px;max-width:64ch}
+.panel p:last-child{margin-bottom:0}
+.panel ul,.panel ol{margin:0 0 8px;padding-left:1.3em;max-width:64ch}
+.panel li{margin:2px 0}
+.panel b{font-weight:700}
+.learn{display:flex;flex-wrap:wrap;gap:6px}
+.learn span{font-size:.8rem;font-weight:700;border:1px solid var(--line);border-radius:999px;padding:1px 10px;background:var(--well)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.panel code{font-family:var(--mono);font-size:.88em;background:var(--well);padding:0 5px;border-radius:4px}
+.panel pre code{background:none;padding:0;font-size:1em}
+.tabs button{background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-weight:600;font-size:.88rem}
+.tabs button[aria-selected="true"]{background:var(--c);border-color:var(--cd);color:#fff}
+.tabs button .s{color:var(--accent);margin-left:3px}
+.tabs button[aria-selected="true"] .s{color:#fff}
+.blocks{display:flex;flex-direction:column;gap:12px}
+.brow{display:flex;flex-direction:column;gap:3px;min-width:0;align-items:flex-start}
+.brow small{color:var(--muted);font-size:.86rem}
+
+/* Scratch-style blocks: colors from --c / --cd on the nearest ancestor */
+.blk{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap;max-width:100%;
+  background:var(--c);color:#fff;border:1px solid var(--cd);font-size:13px;font-weight:500;line-height:1.35}
+.rep{border-radius:999px;padding:4px 11px}
+.bool{clip-path:polygon(12px 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,12px 100%,0 50%);border:none;padding:5px 20px}
+.stk{border-radius:5px;padding:7px 12px}
+.hat{border-radius:22px 22px 5px 5px;padding:13px 14px 7px}
+.cblk{display:inline-flex;flex-direction:column;align-items:stretch;max-width:100%;background:var(--c);border:1px solid var(--cd);border-radius:5px;color:#fff;font-size:13px;font-weight:500;line-height:1.35}
+.cblk .head,.cblk .mid{display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding:7px 12px}
+.cblk .mouth{margin-left:16px;background:var(--surface);border-radius:4px 0 0 4px;padding:3px 0 3px 3px;min-height:22px;display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.cblk .foot{height:12px}
+.blk .rep,.blk .bool{border:1px solid var(--cd);filter:brightness(.96)}
+.slot{display:inline-block;background:var(--slot);color:var(--slot-text);border-radius:999px;padding:0 9px;min-width:22px;text-align:center;font-variant-numeric:tabular-nums}
+.slot.b{background:var(--cd);clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 50%,calc(100% - 8px) 100%,8px 100%,0 50%);border-radius:0;padding:0 14px;min-width:36px;color:#fff}
+.dd{background:var(--cd);border-radius:4px;padding:0 6px}
+.script{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px;background:var(--well);border-radius:12px;overflow-x:auto;max-width:100%}
+.steps{margin-top:8px}
+.steps li::marker{color:var(--c);font-weight:700}
+
+.codebox{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.langs{display:flex;border-bottom:1px solid var(--line);background:var(--well)}
+.langs button{background:transparent;color:var(--muted);border:none;border-radius:0;padding:6px 14px;font-size:.85rem}
+.langs button[aria-selected="true"]{color:var(--fg);background:var(--code);box-shadow:inset 0 -3px 0 var(--c)}
+pre{margin:0;padding:12px 14px;background:var(--code);overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.6;tab-size:4}
+pre .k{color:var(--kw);font-weight:600} pre .s{color:var(--str)} pre .c{color:var(--cm);font-style:italic}
+.oops li::marker{content:"✗  ";color:var(--bad);font-weight:700}
+
+.tip{background:var(--well);border-radius:12px;padding:10px 12px;font-size:.92rem;border-left:4px solid var(--accent)}
+.quest{border:2px dashed var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.quest .q{font-weight:700;line-height:2.1}
+.quest .q .blk,.quest .q .cblk{vertical-align:middle;line-height:1.35;margin:2px 0}
+.ans{display:flex;gap:8px;flex-wrap:wrap}
+.ans input{flex:1 1 140px;min-width:0;font:inherit;font-size:16px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+.choices{display:flex;flex-direction:column;gap:6px}
+.choices button{text-align:left;background:var(--bg);color:var(--fg);border:1px solid var(--line);font-weight:500}
+.choices button.right{border-color:var(--ok);color:var(--ok);font-weight:700}
+.choices button.wrong{border-color:var(--bad);color:var(--bad)}
+.ans input:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button{font:inherit;font-weight:700;cursor:pointer;border-radius:10px;padding:8px 16px;border:1px solid var(--cd);background:var(--c);color:#fff}
+button.ghost{background:transparent;color:var(--fg);border-color:var(--line)}
+.fb{font-weight:700;min-height:1.4em}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.nav{display:flex;gap:8px;flex-wrap:wrap}
+
+.ihead{display:flex;flex-direction:column;gap:6px}
+.prow{display:flex;align-items:center;gap:10px}
+.pbar,.mbar{flex:1;height:10px;border-radius:999px;background:var(--well);overflow:hidden;border:1px solid var(--line)}
+.pbar i,.mbar i{display:block;height:100%;width:0;background:var(--c);border-radius:999px;transition:width .4s}
+.pct{font-family:var(--display);font-weight:700;font-size:1.25rem;font-variant-numeric:tabular-nums;min-width:3.2em;text-align:right}
+.got{display:flex;justify-content:flex-end;margin-top:8px}
+.got button{background:transparent;color:var(--muted);border:1px dashed var(--line);font-size:.85rem;padding:5px 12px}
+.got button[aria-pressed="true"]{background:var(--c);color:#fff;border:1px solid var(--cd)}
+.h3s{margin-left:auto;font-size:.8rem;font-weight:700;color:var(--ok)}
+.tabs button .tp{font-size:.75rem;opacity:.8;margin-left:4px;font-variant-numeric:tabular-nums}
+.finish{border:2px solid var(--c);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;background:var(--well)}
+.finish b{font-size:1.05rem}
+.lbl .bar{display:block;height:3px;border-radius:2px;background:var(--line);margin:1px 0 2px;overflow:hidden}
+.lbl .bar i{display:block;height:100%;background:var(--accent)}
+.lbl.on .bar{background:rgba(255,255,255,.35)} .lbl.on .bar i{background:#fff}
+.lbl .rg{font-weight:500;opacity:.7;margin-left:4px;font-size:.9em}
+.travel{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:5px 14px;font-weight:700;font-size:13px;box-shadow:0 2px 0 var(--line);white-space:nowrap}
+[hidden]{display:none!important}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(10,25,30,.45);display:flex;align-items:center;justify-content:center;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.modal .card{background:var(--surface);color:var(--fg);border-radius:18px;border-top:6px solid var(--c);padding:18px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:10px}
+.modal h3{margin:0;font-size:1.15rem}
+.modal p{margin:0}
+.modal .mbar{flex:none}
+
+:root{--warn:#a85d00;--warn-bg:#fff3df;--warn-line:#f0b25a}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--warn:#ffc266;--warn-bg:#33240c;--warn-line:#8a5a14}}
+:root[data-theme="dark"]{--warn:#ffc266;--warn-bg:#33240c;--warn-line:#8a5a14}
+.pts{margin:0;padding-left:1.2em}
+.pts li{margin:3px 0}
+.pts li::marker{color:var(--c)}
+.warnbox{background:var(--warn-bg);border:1px solid var(--warn-line);border-left:5px solid var(--warn);border-radius:12px;padding:10px 12px;font-size:.92rem;color:var(--fg)}
+.warnbox b{color:var(--warn)}
+.warnbox ul{margin:4px 0;padding-left:1.2em}
+button.warnbtn{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-line)}
+.modal .card.warn{border-top-color:var(--warn);background:var(--surface)}
+.modal .card.warn h3{color:var(--warn)}
+.modal .card.warn #mBody{background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:10px;padding:8px 12px}
+.modal ul{margin:4px 0 6px;padding-left:1.2em}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Scratch 積木群島</h1>
+      <p class="sub">十座島，依資訊課順序一站一站學。島的顏色就是 Scratch 積木的顏色，搭船、飛機、熱氣球跳島，學到 100% 再出發。</p>
+      <div class="swatches" id="swatches"></div>
+    </div>
+    <div class="progress" id="progress"></div>
+  </header>
+  <div class="main">
+    <div class="stage" id="stage">
+      <div class="labels" id="labels"></div>
+      <button type="button" class="overview" id="overviewBtn" hidden>← 回到群島總覽</button>
+      <div class="hint" id="hint">拖曳旋轉 · 滾輪縮放 · 點島登島</div>
+      <div class="travel" id="travel" hidden></div>
+    </div>
+    <section class="panel" id="panel" aria-live="polite"></section>
+  </div>
+</div>
+<div class="modal" id="modal" hidden><div class="card" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <h3 id="mTitle"></h3><p id="mBody"></p><div class="mbar"><i id="mFill"></i></div>
+  <div class="nav"><button type="button" id="mStay"></button><button type="button" class="ghost" id="mGo"></button></div>
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ================= 積木小工具 =================
+const CAT = {
+  motion:['#4c97ff','#3373cc'], looks:['#9966ff','#774dcb'], sound:['#cf63cf','#bd42bd'],
+  events:['#ffbf00','#cc9900'], control:['#ffab19','#cf8b17'], sensing:['#5cb1d6','#2e8eb8'],
+  ops:['#59c059','#389438'], vars:['#ff8c1a','#db6e00'], list:['#ff661a','#e64d00'], my:['#ff6680','#ff3355'],
+};
+const cs = c => c ? ` style="--c:${CAT[c][0]};--cd:${CAT[c][1]}"` : '';
+const S = v => `<span class="slot">${v}</span>`;
+const B = () => `<span class="slot b"></span>`;
+const D = v => `<span class="dd">${v} ▾</span>`;
+const rp = (h,c) => `<span class="blk rep"${cs(c)}>${h}</span>`;
+const bo = (h,c) => `<span class="blk bool"${cs(c)}>${h}</span>`;
+const st = (h,c) => `<span class="blk stk"${cs(c)}>${h}</span>`;
+const hat = (h,c) => `<span class="blk hat"${cs(c)}>${h}</span>`;
+const cb = (head,inner='',c,mid,inner2='') => `<span class="cblk"${cs(c)}><span class="head">${head}</span><span class="mouth">${inner}</span>${mid?`<span class="mid">${mid}</span><span class="mouth">${inner2}</span>`:''}<span class="foot"></span></span>`;
+const FLAG = '<span style="color:#4cbf56;background:#fff;border-radius:4px;padding:0 4px">⚑</span>';
+const GO = hat(`當 ${FLAG} 被點擊`,'events');
+const v = n => rp(n,'vars');                    // 變數圓角積木
+const setv = (n,x) => st(`變數 ${D(n)} 設為 ${x}`,'vars');
+const chg = (n,x) => st(`變數 ${D(n)} 改變 ${x}`,'vars');
+const say = (x,s) => st(s?`說出 ${x} 持續 ${S(s)} 秒`:`說出 ${x}`,'looks');
+const wait = s => st(`等待 ${S(s)} 秒`,'control');
+const IF = (cond,inner,elseInner) => elseInner!==undefined ? cb(`如果 ${cond} 那麼`,inner,'control','否則',elseInner) : cb(`如果 ${cond} 那麼`,inner,'control');
+const FOREVER = inner => cb('重複無限次',inner,'control');
+const REPEAT = (n,inner) => cb(`重複 ${n} 次`,inner,'control');
+const gt = (a,b) => bo(`${a} > ${b}`,'ops'), lt = (a,b) => bo(`${a} < ${b}`,'ops');
+const key = k => bo(`${D(k)} 鍵被按下?`,'sensing');
+const touch = k => bo(`碰到 ${D(k)} ?`,'sensing');
+
+// 簡易語法上色（Python / JavaScript 共用）
+function hl(code){
+  const esc = s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const re = /(#[^\n]*|\/\/[^\n]*)|("[^"\n]*"|'[^'\n]*')|\b(def|for|in|range|while|if|elif|else|return|import|from|True|False|break|continue|let|const|function|of|true|false|print|len|and|or|not|new)\b/g;
+  let out='', last=0, m;
+  while((m=re.exec(code))){ out+=esc(code.slice(last,m.index)); const t=esc(m[0]);
+    out+= m[1]?`<span class="c">${t}</span>`: m[2]?`<span class="s">${t}</span>`:`<span class="k">${t}</span>`; last=re.lastIndex; }
+  return out+esc(code.slice(last));
+}
+
+// ================= 島嶼內容 =================
+const RAW = [
+ { id:'events', cat:'events', name:'事件島', region:'綠旗港', mark:'flag',
+   lead:'程式的起點：學會讓程式「開始跑」。',
+   learn:['循序執行','事件驅動','初始化'],
+   sights:['綠旗燈塔：亮燈，全島程式一起啟動','廣播鐘樓：鐘一響，聽到的居民一起行動','揮旗的港務員：負責按下開始'],
+   topics:[
+    { id:'start', name:'事件與執行順序',
+      concept:['程式由上往下，一顆一顆依序執行（<b>循序</b>）','帽子積木是開關，等事件發生才開始','事件：綠旗、按鍵、點擊角色、收到廣播','一個角色可以有好幾段程式同時跑（<b>平行</b>）','綠旗後先設好位置、造型、分數（<b>初始化</b>）'],
+      blocks:[
+        [GO,'按下綠旗，全部角色一起啟動'],
+        [hat(`當 ${D('空白')} 鍵被按下`),'鍵盤操控'],
+        [hat('當角色被點擊'),'做按鈕'],
+        [hat(`當背景換成 ${D('關卡2')}`),'切換場景時觸發'],
+        [st(`廣播訊息 ${D('遊戲開始')}`),'對所有角色喊一聲'],
+        [st(`廣播訊息 ${D('遊戲開始')} 並等待`),'等收到的程式都跑完才往下'],
+        [hat(`當收到訊息 ${D('遊戲開始')}`),'聽到廣播就開始'],
+      ],
+      example:{ script:[GO, st(`定位到 x: ${S('0')} y: ${S('0')}`,'motion'), st(`造型換成 ${D('站立')}`,'looks'), say(S('準備好了！'),'1'), st(`廣播訊息 ${D('遊戲開始')}`)],
+        steps:['按綠旗，程式啟動','回到中央、換回站立造型（初始化）','說話 1 秒，程式在這裡等','廣播：通知其他角色開始'] },
+      code:{ py:`# 由上往下依序執行
+print("第一行")
+print("第二行")
+
+# 事件：按鈕被點擊時執行
+def on_click():
+    print("按鈕被點了")
+
+button.config(command=on_click)`,
+        js:`// 由上往下依序執行
+console.log("第一行");
+console.log("第二行");
+
+// 事件：按鈕被點擊時執行
+button.addEventListener("click", () => {
+  console.log("按鈕被點了");
+});` },
+      oops:['積木沒接在帽子下 → 不會執行','沒有初始化 → 上一次的狀態留下來','兩段程式改同一件事 → 角色亂跳'],
+      tip:'廣播就像全校廣播：一喊，聽到的角色一起動。',
+      quest:{ q:'想讓所有角色同時開始，最常用哪顆積木？', choices:['當 ⚑ 被點擊','當角色被點擊','等待 1 秒'], a:0, hint:'舞台左上角那支綠色的旗子。' } }] },
+
+ { id:'motion', cat:'motion', name:'動作島', region:'座標群嶼', mark:'slider',
+   lead:'控制角色的位置和方向。',
+   learn:['座標系統','絕對與相對','動畫原理'],
+   sights:['座標廣場：地上畫滿格線','方向路標：90 往右、0 往上','來回慢跑的跑者：每次只跑一小步'],
+   topics:[
+    { id:'move', name:'座標與移動',
+      concept:['舞台是座標平面，中心 (0, 0)','x：−240 到 240，往右變大','y：−180 到 180，往上變大','<b>絕對</b>：「定位到」直接指定位置','<b>相對</b>：「改變」從現在的位置加減','方向：90 右、−90 左、0 上、180 下','動畫 ＝ 小步移動 ＋ 迴圈重複'],
+      blocks:[
+        [st(`移動 ${S('10')} 點`),'往面朝的方向走'],
+        [st(`右轉 ↻ ${S('15')} 度`),'順時針轉'],
+        [st(`定位到 x: ${S('0')} y: ${S('0')}`),'絕對位置'],
+        [st(`x 改變 ${S('10')}`),'相對位置，負數往左'],
+        [st(`滑行 ${S('1')} 秒到 x: ${S('100')} y: ${S('0')}`),'慢慢滑過去'],
+        [st(`面朝 ${S('90')} 度`),'設定方向'],
+        [st('碰到邊緣就反彈'),'在舞台裡來回跑'],
+        [rp('x 座標'),'回報目前的 x'],
+      ],
+      example:{ script:[GO, st(`定位到 x: ${S('-200')} y: ${S('0')}`), st(`面朝 ${S('90')} 度`), st(`迴轉方式設為 ${D('左-右')}`), FOREVER(st(`移動 ${S('5')} 點`)+st('碰到邊緣就反彈'))],
+        steps:['放到左邊、面朝右（初始化）','迴轉方式「左-右」→ 不會倒立','迴圈：走 5 點，碰邊就反彈'] },
+      code:{ py:`import turtle
+t = turtle.Turtle()
+
+t.goto(-200, 0)   # 定位到
+t.forward(10)     # 移動 10 點
+t.right(15)       # 右轉 15 度
+print(t.xcor())   # x 座標`,
+        js:`sprite.x = -200;  // 定位到
+sprite.y = 0;
+sprite.x += 10;   // x 改變 10
+
+// 網頁 canvas 的 y 往下才變大
+ctx.drawImage(img, sprite.x, sprite.y);` },
+      oops:['0 度是朝上，不是朝右','一次「移動 100 點」→ 瞬移，看不到動畫','網頁、遊戲引擎的 y 軸方向和 Scratch 相反'],
+      tip:'角色反彈後倒立？把迴轉方式設成「左-右」。',
+      quest:{ q:`角色在 x: 0、面朝 90 度。執行三次 ${st(`移動 ${S('10')} 點`)}，x 座標是多少？`, a:['30','三十'], hint:'往右，每次加 10。' } }] },
+
+ { id:'looks', cat:'looks', name:'外觀島', region:'魔鏡礁', mark:'mirror',
+   lead:'改變角色看起來的樣子：說話、造型、背景、特效。',
+   learn:['輸出','造型編號','逐格動畫'],
+   sights:['魔鏡劇場：紅色布幕的舞台','魔法鏡：照一下就變大變小','會變色的演員：圖像效果示範'],
+   topics:[
+    { id:'look', name:'造型、說話與特效',
+      concept:['「說出」＝<b>輸出</b>，像 Python 的 print()','除錯：用「說出」顯示變數的值','造型有編號，「下一個造型」＝編號 +1','最後一個造型的下一個 → 回到第 1 個','<b>逐格動畫</b> ＝ 換造型 ＋ 短暫等待','圖層決定誰蓋在上面'],
+      blocks:[
+        [st(`說出 ${S('你好！')} 持續 ${S('2')} 秒`),'程式會停 2 秒'],
+        [st(`說出 ${S('你好！')}`),'氣泡留著，程式馬上繼續'],
+        [st(`造型換成 ${D('造型2')}`),'換到指定造型'],
+        [st('下一個造型'),'編號 +1'],
+        [st(`背景換成 ${D('背景1')}`),'切換關卡'],
+        [st(`圖像效果 ${D('顏色')} 改變 ${S('25')}`),'還有魚眼、漩渦、幽靈'],
+        [st('清除圖像效果'),'特效歸零'],
+        [st(`尺寸設為 ${S('100')} %`),'100 是原本大小'],
+        [st('隱藏'),'搭配「顯示」'],
+      ],
+      example:{ script:[GO, st(`造型換成 ${D('走路1')}`), FOREVER(st('下一個造型')+wait('0.2'))],
+        steps:['換回第一個造型（初始化）','迴圈：下一個造型、等 0.2 秒','每秒換 5 次 → 像在走路'] },
+      code:{ py:`print("你好！")      # 說出 = 輸出
+
+frames = ["walk1.png", "walk2.png"]
+i = 0
+while True:
+    show(frames[i])
+    i = (i + 1) % len(frames)  # 下一個造型
+    time.sleep(0.2)`,
+        js:`console.log("你好！");
+
+const frames = ["walk1.png", "walk2.png"];
+let i = 0;
+setInterval(() => {
+  img.src = frames[i];
+  i = (i + 1) % frames.length;
+}, 200);` },
+      oops:['「說出…持續 2 秒」會讓程式停 2 秒','隱藏後忘了在綠旗時顯示','特效會累加，重玩要清除'],
+      tip:'不知道變數現在多少？放一顆「說出 (變數)」看看。',
+      quest:{ q:`角色有 3 個造型，現在是造型 3。執行 ${st('下一個造型')} 後是第幾個？`, a:['1','一','造型1','第一個'], hint:'最後一個的下一個會繞回開頭。' } }] },
+
+ { id:'sound', cat:'sound', name:'音效島', region:'音浪灣', mark:'speaker',
+   lead:'播放、停止聲音和調整音量。',
+   learn:['同步與非同步','屬性'],
+   sights:['音浪音樂廳：巨大喇叭塔','大鼓廣場：一敲就震動','跳舞的樂手：跟著節拍跳'],
+   topics:[
+    { id:'play', name:'播放與等待',
+      concept:['<b>同步</b>：「直到結束」→ 播完才往下','<b>非同步</b>：「播放音效」→ 邊播邊往下','其他語言也分「會等」和「不會等」的指令','音量是角色的<b>屬性</b>，每個角色各有一個'],
+      blocks:[
+        [st(`播放音效 ${D('喵')} 直到結束`),'同步：播完才往下'],
+        [st(`播放音效 ${D('喵')}`),'非同步：邊播邊繼續'],
+        [st('停播所有音效'),'全部停止'],
+        [st(`音量改變 ${S('-10')}`),'負數變小聲'],
+        [st(`音量設為 ${S('100')} %`),'0 是靜音'],
+      ],
+      example:{ script:[GO, st(`音量設為 ${S('60')} %`), FOREVER(st(`播放音效 ${D('背景音樂')} 直到結束`))],
+        steps:['設定音量','迴圈＋「直到結束」→ 播完才重播','換成不會等的版本 → 每圈都重頭播'] },
+      code:{ py:`from playsound import playsound
+
+playsound("meow.mp3")   # 同步：播完才往下
+print("播完了")`,
+        js:`const meow = new Audio("meow.mp3");
+meow.play();            // 非同步：不會等
+console.log("馬上執行");
+
+meow.onended = () => console.log("播完了");` },
+      oops:['迴圈裡用「播放音效」→ 一直重頭播','換關卡前先「停播所有音效」','背景音樂放舞台，不要放角色'],
+      tip:'角色只放自己的音效（跳躍、吃金幣），背景音樂交給舞台。',
+      quest:{ q:'要讓背景音樂播完再重播，迴圈裡放哪一顆？', choices:['播放音效 音樂 直到結束','播放音效 音樂'], a:0, hint:'另一顆不會等聲音播完。' } }] },
+
+ { id:'loop', cat:'control', name:'迴圈島', region:'摩天輪半島', mark:'loop',
+   lead:'同一件事做很多次，一顆積木就搞定。',
+   learn:['重複結構','計數迴圈','條件迴圈','無限迴圈','巢狀迴圈'],
+   sights:['無限摩天輪：一直轉、永遠不停','旋轉木馬：每圈轉固定次數','排隊的遊客：一個接一個重複上車'],
+   topics:[
+    { id:'loop', name:'迴圈',
+      concept:['<b>計數迴圈</b>：知道次數 → 重複 N 次（for）','<b>條件迴圈</b>：做到條件成立 → 重複直到（while）','<b>無限迴圈</b>：一直做 → 重複無限次（while True）','每跑一次 ＝ 一次<b>迭代</b>','<b>巢狀迴圈</b>：外 3 次 × 內 4 次 ＝ 12 次','怎麼選：知道次數用 N 次；等事情發生用直到；遊戲用無限'],
+      blocks:[
+        [wait('1'),'暫停一下'],
+        [REPEAT(S('10'), st(`移動 ${S('10')} 點`,'motion')),'計數迴圈'],
+        [FOREVER(st('下一個造型','looks')),'無限迴圈，底下不能再接'],
+        [cb(`重複直到 ${B()}`),'條件成立就停'],
+      ],
+      example:{ script:[GO, st('全部清除','motion'), st('下筆','motion'), REPEAT(S('4'), st(`移動 ${S('100')} 點`,'motion')+st(`右轉 ↻ ${S('90')} 度`,'motion')+wait('0.3')), say(S('畫完了！'))],
+        steps:['清除畫面、下筆','重複 4 次：走 100 點、右轉 90 度','4 條邊 → 正方形','三角形？重複 3 次、轉 120 度','規律：轉角 ＝ 360 ÷ 邊數'] },
+      code:{ py:`for i in range(5):        # 重複 5 次
+    print(i)
+
+while not touching_edge():  # 重複直到
+    move(5)
+
+while True:               # 重複無限次
+    update()`,
+        js:`for (let i = 0; i < 5; i++) {
+  console.log(i);
+}
+while (!touchingEdge()) { move(5); }
+while (true) { update(); }` },
+      oops:['Scratch「重複直到」成立就停；Python while 成立才繼續（方向相反）','無限迴圈底下不能再接積木','條件永遠不成立 → 停不下來','迴圈裡沒等待 → 太快看不到'],
+      tip:'寫迴圈前先問：我知道要做幾次嗎？',
+      quest:{ q:'外層「重複 3 次」，裡面放「重複 4 次」的「說出 嗨」。總共說幾次？', a:['12','十二'], hint:'外層每圈，內層跑 4 次。' } }] },
+
+ { id:'sensing', cat:'sensing', name:'偵測島', region:'雷達大陸', mark:'radar',
+   lead:'角色的眼睛和耳朵：碰撞、按鍵、滑鼠、輸入、計時。',
+   learn:['輸入','輸入→處理→輸出','布林值','計時'],
+   sights:['雷達站：一直轉圈掃描','天文台：觀察遠方的動靜','瞭望塔與哨兵：四處張望'],
+   topics:[
+    { id:'sense', name:'碰撞、輸入、計時',
+      concept:['程式三步驟：<b>輸入 → 處理 → 輸出</b>','偵測島負責輸入','六角形：回報 true / false，放進條件格','圓角：回報數字或文字','「詢問並等待」＝ Python 的 input()','計時器：從綠旗開始數秒'],
+      blocks:[
+        [touch('鼠標'),'也可選邊緣、其他角色'],
+        [bo(`碰到顏色 <span class="slot" style="background:#e33;min-width:16px"></span> ?`),'迷宮撞牆'],
+        [rp(`與 ${D('鼠標')} 的間距`),'回報距離'],
+        [st(`詢問 ${S('你叫什麼名字？')} 並等待`),'讓使用者打字'],
+        [rp('詢問的答案'),'剛剛打的內容'],
+        [key('空白'),'放在迴圈裡連續偵測'],
+        [rp('鼠標的 x'),'滑鼠位置'],
+        [rp('計時器'),'從綠旗開始計秒'],
+        [st('計時器重置'),'歸零'],
+      ],
+      example:{ script:[GO, st(`詢問 ${S('你叫什麼名字？')} 並等待`), say(rp(`字串組合 ${S('你好，')} ${rp('詢問的答案')}`,'ops'),'2')],
+        steps:['跳出輸入框（輸入）','把「你好，」和答案接起來（處理）','角色說出來（輸出）'] },
+      code:{ py:`name = input("你叫什麼名字？")
+print("你好，" + name)
+
+age = int(input("幾歲？"))  # 文字轉數字`,
+        js:`const name = prompt("你叫什麼名字？");
+console.log("你好，" + name);
+
+document.addEventListener("keydown", e => {
+  if (e.key === " ") jump();
+});` },
+      oops:['「詢問的答案」只留最新一次','按鍵帽子會頓一下 → 用迴圈＋偵測','「碰到顏色」要完全同色','Python input() 拿到的是文字'],
+      tip:'迷宮：碰到牆的顏色，就往回退同樣的距離。',
+      quest:{ q:`${st('計時器重置')} 後 ${wait('2')}，${rp('計時器')} 大約是多少？`, a:['2','二','2秒'], hint:'重置後從 0 開始。' } }] },
+
+ { id:'ops', cat:'ops', name:'運算島', region:'算盤高原', mark:'plus',
+   lead:'處理數字、文字和邏輯。分成七區。',
+   learn:['運算子','運算順序','布林值','字串','餘數'],
+   sights:['加號塔：高原上的地標','巨型算盤：珠子會自己滑動','計算機工坊：數學家們在這裡上班'],
+   topics:[
+     { id:'arith', name:'四則運算',
+       concept:['+ − * / 是<b>算術運算子</b>','回報積木：吐出一個數字','沒有括號 → 先算最裡面那顆','Python、JS 用括號控制順序'],
+       blocks:[[rp(`${S('3')} + ${S('4')}`),'回報 7'],[rp(`${S('10')} − ${S('2.5')}`),'可以有小數'],[rp(`${S('6')} * ${S('7')}`),'乘號是 *'],[rp(`${S('7')} / ${S('2')}`),'回報 3.5']],
+       code:{ py:`print(7 / 2)        # 3.5
+print(7 // 2)       # 3 整數除法
+print((3 + 4) * 2)  # 14`, js:`console.log(7 / 2);           // 3.5
+console.log(Math.floor(7 / 2)); // 3
+console.log((3 + 4) * 2);     // 14` },
+       oops:['包錯層 → 順序不對、答案不同','打全形數字 → 被當成 0'],
+       tip:'想先加再乘：把 + 積木塞進 * 積木裡。',
+       quest:{ q:`${rp(`${rp(`${S('3')} + ${S('4')}`)} * ${S('2')}`)} 回報多少？`, a:['14','十四'], hint:'先算裡面。' } },
+     { id:'random', name:'隨機',
+       concept:['每次結果都不同 → 遊戲好玩的關鍵','兩邊整數 → 回報整數','有小數點 → 回報小數'],
+       blocks:[[rp(`隨機取數 ${S('1')} 到 ${S('6')}`),'像骰子'],[rp(`隨機取數 ${S('1')} 到 ${S('1.0')}`),'回報小數'],[rp(`隨機取數 ${S('-240')} 到 ${S('240')}`),'隨機 x 座標']],
+       code:{ py:`import random
+dice = random.randint(1, 6)`, js:`const dice = Math.floor(Math.random() * 6) + 1;` },
+       oops:['50% 機率：用 1 到 2，不是 1 到 1'],
+       tip:'隨機位置別超出舞台範圍。',
+       quest:{ q:`${rp(`隨機取數 ${S('1')} 到 ${S('6')}`)} 有幾種可能結果？`, a:['6','六'], hint:'數一數 1 到 6。' } },
+     { id:'compare', name:'比較',
+       concept:['回報<b>布林值</b>：true / false','Scratch 只有 > < =','其他語言還有 >= <= !=','Scratch 比文字不分大小寫'],
+       blocks:[[bo(`${S('10')} > ${S('9')}`),'true'],[bo(`${S('3')} < ${S('3')}`),'false'],[bo(`${S('apple')} = ${S('APPLE')}`),'true']],
+       code:{ py:`print(10 > 9)      # True
+print("a" == "A")  # False，分大小寫
+print(5 != 3)      # True`, js:`console.log(3 >= 3);      // true
+console.log("a" === "A"); // false` },
+       oops:['Python、JS 比文字會分大小寫'],
+       tip:'大於等於：「分數 < 60 不成立」。',
+       quest:{ q:`${bo(`${S('Cat')} = ${S('cat')}`)} 回報 true 還是 false？`, a:['true','是','對'], hint:'Scratch 比文字在意大小寫嗎？' } },
+     { id:'logic', name:'邏輯',
+       concept:['<b>且</b>：兩邊都成立','<b>或</b>：任一邊成立','<b>不成立</b>：結果反過來'],
+       blocks:[[bo(`${B()} 且 ${B()}`),'and'],[bo(`${B()} 或 ${B()}`),'or'],[bo(`${B()} 不成立`),'not']],
+       code:{ py:`if coin and space_pressed:
+    score += 1
+if not game_over:
+    move()`, js:`if (coin && spacePressed) score++;
+if (!gameOver) move();` },
+       oops:['0 < x < 100 要寫成「x > 0 且 x < 100」'],
+       tip:'把條件唸出來，唸得通就對了。',
+       quest:{ q:`${bo(`${bo(`${S('5')} > ${S('3')}`)} 且 ${bo(`${S('2')} > ${S('4')}`)}`)} 回報什麼？`, a:['false','否','錯'], hint:'兩邊分開判斷。' } },
+     { id:'string', name:'字串',
+       concept:['文字 ＝ <b>字串</b>','可以接、量長度、取字、找字','Scratch 從第 1 字數，Python/JS 從 0'],
+       blocks:[[rp(`字串組合 ${S('apple ')} ${S('banana')}`),'接起來'],[rp(`字串 ${S('apple')} 的第 ${S('1')} 字`),'a'],[rp(`字串 ${S('apple')} 的長度`),'5'],[bo(`字串 ${S('apple')} 包含 ${S('a')} ?`),'true']],
+       code:{ py:`s = "apple"
+print(s[0], len(s), "a" in s)`, js:`const s = "apple";
+console.log(s[0], s.length, s.includes("a"));` },
+       oops:['字串組合不會自動加空格'],
+       tip:'「字串組合 你好， (名字)」→ 你好，小明',
+       quest:{ q:`${rp(`字串 ${S('scratch')} 的長度`)} 回報多少？`, a:['7','七'], hint:'一個字母算一個。' } },
+     { id:'mod', name:'餘數與四捨五入',
+       concept:['判斷奇偶：除以 2 餘 0 → 偶數','每隔幾次：除以 5 餘 0','循環編號：在 0、1、2 之間繞'],
+       blocks:[[rp(`${S('17')} 除以 ${S('5')} 的餘數`),'2'],[rp(`四捨五入數值 ${S('2.5')}`),'3'],[bo(`${rp(`${S('數字')} 除以 ${S('2')} 的餘數`)} = ${S('0')}`),'偶數判斷']],
+       code:{ py:`print(17 % 5)   # 2
+if n % 2 == 0:
+    print("偶數")`, js:`console.log(17 % 5); // 2` },
+       oops:['Python round(2.5) 是 2，和 Scratch 不同'],
+       tip:'每 10 秒做一次：計時器 除以 10 的餘數 = 0',
+       quest:{ q:`${rp(`${S('23')} 除以 ${S('4')} 的餘數`)} 回報多少？`, a:['3','三'], hint:'4 × 5 = 20。' } },
+     { id:'func', name:'數學函式',
+       concept:['一顆積木、一個下拉選單','絕對值、捨去、進位、平方根、sin、cos…','其他語言放在 math / Math 裡'],
+       blocks:[[rp(`${D('絕對值')} 數值 ${S('-8')}`),'8'],[rp(`${D('無條件捨去')} 數值 ${S('3.9')}`),'3'],[rp(`${D('無條件進位')} 數值 ${S('3.1')}`),'4'],[rp(`${D('平方根')} 數值 ${S('16')}`),'4']],
+       code:{ py:`import math
+math.floor(3.9); math.sqrt(16)`, js:`Math.floor(3.9); Math.sqrt(16);` },
+       oops:['Scratch 的 sin 用「度」，其他語言用「弧度」'],
+       tip:'sin 90 ＝ 1，做繞圈動畫很方便。',
+       quest:{ q:`${rp(`${D('平方根')} 數值 ${S('81')}`)} 回報多少？`, a:['9','九'], hint:'幾乘幾等於 81？' } },
+   ] },
+
+ { id:'vars', cat:'vars', name:'變數列表島', region:'寶盒大陸', mark:'crates',
+   lead:'讓程式記住東西：變數是一個盒子，列表是一排盒子。',
+   learn:['變數','初始化','計數器','累加器','旗標','陣列與索引'],
+   sights:['寶盒倉庫：每個箱子都貼著名字','吊車：把值搬進搬出','編號貨架：一格一格排好的列表'],
+   topics:[
+     { id:'var', name:'變數',
+       concept:['變數 ＝ 有名字的盒子','三步驟：<b>建立 → 初始化 → 使用與更新</b>','<b>設為</b>：整個換掉（=）','<b>改變</b>：加減（+=）','所有角色可用 ＝ 全域變數（分數、關卡）','僅此角色 ＝ 區域變數（每隻敵人的血量）','取有意義的名字：分數、生命，不要 a、b'],
+       blocks:[[setv('分數',S('0')),'整個換掉'],[chg('分數',S('1')),'加 1，負數就是減'],[v('分數'),'目前的值'],[st(`顯示變數 ${D('分數')}`),'顯示計分板']],
+       example:{ script:[GO, setv('分數',S('0')), st(`顯示變數 ${D('分數')}`), '<div style="height:14px"></div>', hat('當角色被點擊','events'), chg('分數',S('1')), st(`播放音效 ${D('叮')}`,'sound'), st(`定位到 ${D('隨機位置')}`,'motion')],
+         steps:['兩段程式組成「點點樂」','綠旗：分數設 0、顯示計分板','被點到：分數 +1、播音效、跳走','用「改變」，不是「設為」'] },
+       code:{ py:`score = 0        # 建立 + 初始化
+score += 1       # 改變 1
+print(score)`, js:`let score = 0;
+score += 1;
+console.log(score);` },
+       oops:['忘了初始化 → 分數一直累積','「設為 1」當成加分','在文字格打「分數」→ 只是文字','血量用全域變數 → 全部敵人一起扣'],
+       tip:'勾選變數旁的方框，舞台會顯示它的值。',
+       quest:{ q:`${setv('分數',S('0'))} 後，重複 5 次 ${chg('分數',S('2'))}，分數是多少？`, a:['10','十'], hint:'0 加 5 次 2。' } },
+     { id:'patterns', name:'常用模式',
+       concept:['<b>計數器</b>：發生一次就 +1','<b>累加器</b>：把數字全部加起來','<b>旗標</b>：用 0 / 1 記錄狀態','<b>狀態變數</b>：關卡 1、2、3','<b>最高分</b>：新分數比較大就換掉','<b>交換</b>：先放進暫存變數'],
+       blocks:[[chg('答對題數',S('1')),'計數器'],[chg('總分',v('這題分數')),'累加器'],[setv('遊戲結束',S('1')),'旗標']],
+       example:{ script:[setv('暫存',v('a')), setv('a',v('b')), setv('b',v('暫存'))],
+         steps:['想交換 a、b','a 先放進暫存','b 放進 a','暫存放進 b'] },
+       code:{ py:`count += 1        # 計數器
+total += n        # 累加器
+a, b = b, a       # 交換`, js:`count++;
+total += n;
+let temp = a; a = b; b = temp;` },
+       oops:['計數器、累加器也要先設 0','直接 a 設為 b、b 設為 a → 兩個都變 b'],
+       tip:'主角死掉 → 旗標設 1 → 其他角色看到就停。',
+       quest:{ q:`a = 3、b = 7，依序執行 ${setv('暫存',v('a'))} ${setv('a',v('b'))} ${setv('b',v('暫存'))}，b 是多少？`, a:['3','三'], hint:'暫存放的是 a 原本的值。' } },
+     { id:'list', name:'列表',
+       concept:['列表 ＝ 一排有編號的盒子（<b>陣列</b>）','編號叫<b>索引</b>','Scratch 從 1 開始，Python/JS 從 <b>0</b>','<b>走訪</b>：迴圈 ＋ i，從第 1 項到最後','迴圈次數用「長度」，資料增減都不用改'],
+       blocks:[[st(`添加 ${S('蘋果')} 到 ${D('水果')}`,'list'),'加在最後'],[st(`刪除 ${D('水果')} 的第 ${S('1')} 項`,'list'),'刪掉一項'],[st(`刪除 ${D('水果')} 的所有項目`,'list'),'清空'],[rp(`${D('水果')} 的第 ${S('1')} 項`,'list'),'讀出一項'],[rp(`${D('水果')} 的長度`,'list'),'幾筆'],[bo(`${D('水果')} 包含 ${S('蘋果')} ?`,'list'),'有沒有']],
+       example:{ script:[GO, st(`刪除 ${D('水果')} 的所有項目`,'list'), st(`添加 ${S('蘋果')} 到 ${D('水果')}`,'list'), st(`添加 ${S('香蕉')} 到 ${D('水果')}`,'list'), setv('i',S('1')),
+           REPEAT(rp(`${D('水果')} 的長度`,'list'), say(rp(`${D('水果')} 的第 ${v('i')} 項`,'list'),'1')+chg('i',S('1')))],
+         steps:['清空再放資料（初始化）','i 從 1 開始','重複「長度」次：說第 i 項、i +1'] },
+       code:{ py:`fruits = ["蘋果", "香蕉"]
+fruits.append("芭樂")
+print(fruits[0])     # 蘋果，從 0 開始
+for f in fruits:
+    print(f)`, js:`const fruits = ["蘋果", "香蕉"];
+fruits.push("芭樂");
+console.log(fruits[0]);
+for (const f of fruits) console.log(f);` },
+       oops:['綠旗沒清空 → 資料越玩越多','走訪時 i 從 0 開始（Scratch 要從 1）'],
+       tip:'隨機抽題：第 (隨機取數 1 到 長度) 項。',
+       quest:{ q:`「水果」是：蘋果、香蕉、芭樂。${rp(`${D('水果')} 的第 ${S('2')} 項`,'list')} 是什麼？`, a:['香蕉'], hint:'Scratch 從 1 開始數。' } },
+   ] },
+
+ { id:'if', cat:'control', name:'判斷島', region:'岔路大陸', mark:'fork',
+   lead:'根據情況做不同的事，程式變聰明的關鍵。',
+   learn:['選擇結構','if / else','多選一','遊戲主迴圈'],
+   sights:['岔路路標：往左還是往右？','紅綠燈：條件成立才放行','柵欄關口：守衛檢查通行證'],
+   topics:[
+    { id:'if', name:'判斷',
+      concept:['<b>條件</b>：六角形積木，true / false','<b>單一判斷</b>：如果…那麼（if）','<b>二選一</b>：如果…否則（if / else）','<b>多選一</b>：否則裡再放如果（elif）','<b>多重條件</b>：且、或、不成立','由上往下檢查，第一個成立就執行','嚴格的條件放前面（> 89 在 > 59 前）'],
+      blocks:[[IF(B()),'成立才做'],[IF(B(),'',''),'二選一'],[st(`等待直到 ${B()}`),'等到成立'],[st(`停止 ${D('全部')}`),'結束程式']],
+      example:{ script:[GO, st(`詢問 ${S('考幾分？')} 並等待`,'sensing'), setv('分數',rp('詢問的答案','sensing')),
+          IF(gt(v('分數'),S('89')), say(S('優等')), IF(gt(v('分數'),S('59')), say(S('及格')), say(S('加油'))))],
+        steps:['問分數，存進變數','> 89 → 優等','否則 > 59 → 及格','都不是 → 加油'] },
+      code:{ py:`if score >= 90:
+    print("優等")
+elif score >= 60:
+    print("及格")
+else:
+    print("加油")`,
+        js:`if (score >= 90) {
+  console.log("優等");
+} else if (score >= 60) {
+  console.log("及格");
+} else {
+  console.log("加油");
+}` },
+      oops:['「如果」只檢查一次 → 要放進迴圈','大範圍條件放前面 → 後面輪不到','沒有 ≥ → 用 > 89','比較用 =，改值用「設為」'],
+      tip:'先列出所有情況，確定每種都有路走。',
+      quest:{ q:`分數 50，執行 ${IF(gt(v('分數'),S('60')), say(S('及格')), say(S('加油')))} 會說什麼？`, a:['加油'], hint:'50 > 60 嗎？' } },
+    { id:'gameloop', name:'迴圈＋判斷',
+      concept:['遊戲 ＝ 無限迴圈裡放很多判斷','每一圈 ＝ 畫面一格（約每秒 30 格）','① 初始化：放在迴圈外','② 主迴圈：重複無限次','③ 判斷：輸入 → 碰撞 → 勝負','用多個獨立「如果」，不要用「否則」串起來'],
+      blocks:[[FOREVER(IF(key('右移'), st(`x 改變 ${S('5')}`,'motion'))),'按住就一直移動']],
+      example:{ script:[GO, st(`定位到 x: ${S('0')} y: ${S('-120')}`,'motion'), setv('生命',S('3')),
+          FOREVER(IF(key('右移'), st(`x 改變 ${S('5')}`,'motion')) + IF(key('左移'), st(`x 改變 ${S('-5')}`,'motion')) + IF(touch('敵人'), chg('生命',S('-1'))+wait('1')) + IF(lt(v('生命'),S('1')), st(`停止 ${D('全部')}`)))],
+        steps:['初始化：位置、生命 3','左右鍵 → 移動','碰到敵人 → 扣血、等 1 秒','生命 < 1 → 遊戲結束'] },
+      code:{ py:`lives = 3
+while True:
+    if key_pressed("right"): x += 5
+    if touching("enemy"):    lives -= 1
+    if lives < 1: break`,
+        js:`let lives = 3;
+function update() {
+  if (keys.right) x += 5;
+  if (touching(enemy)) lives--;
+  if (lives < 1) return gameOver();
+  requestAnimationFrame(update);
+}` },
+      oops:['初始化放進迴圈 → 每圈被重設','碰撞後沒等待 → 一瞬間扣光','用按鍵帽子移動 → 卡頓'],
+      tip:'一次只加一個「如果」，測試正確再加下一個。',
+      quest:{ q:'「變數 生命 設為 3」應該放在哪？', choices:['重複無限次的上面（迴圈外）','重複無限次的裡面','停止全部的後面'], a:0, hint:'初始化只做一次。' } },
+   ] },
+
+ { id:'my', cat:'my', name:'函式積木島', region:'齒輪冰原', mark:'puzzle',
+   lead:'發明自己的積木：其他語言叫「函式」。',
+   learn:['函式','參數','模組化','拆解問題'],
+   sights:['積木工廠：煙囪冒著煙','齒輪組：一個帶動一個','輸送帶：同一個模具做出不同大小的積木'],
+   topics:[
+    { id:'define', name:'自訂積木與參數',
+      concept:['<b>函式</b> ＝ 把一段程式包起來取名字','好處：不重複、好修改、好閱讀','<b>參數</b>：同一個函式做不同的事','參數只能在定義裡用','<b>拆解問題</b>：大問題 → 小積木','自訂積木沒有回傳值 → 結果存進變數'],
+      blocks:[[hat(`定義 畫正方形 ${rp('邊長','my')}`),'定義內容'],[st(`畫正方形 ${S('50')}`),'呼叫，邊長 50'],[rp('邊長'),'參數']],
+      example:{ script:[hat(`定義 畫多邊形 ${rp('邊數')} ${rp('邊長')}`), st('下筆','motion'), REPEAT(rp('邊數'), st(`移動 ${rp('邊長')} 點`,'motion')+st(`右轉 ↻ ${rp(`${S('360')} / ${rp('邊數')}`,'ops')} 度`,'motion'))],
+        steps:['兩個參數：邊數、邊長','重複「邊數」次：走一邊、轉 360 ÷ 邊數','畫多邊形 3 100 → 三角形','畫多邊形 6 50 → 六邊形'] },
+      code:{ py:`def draw_polygon(sides, length):
+    for i in range(sides):
+        t.forward(length)
+        t.right(360 / sides)
+
+draw_polygon(6, 50)`,
+        js:`function drawPolygon(sides, length) {
+  for (let i = 0; i < sides; i++) {
+    forward(length);
+    right(360 / sides);
+  }
+}
+drawPolygon(6, 50);` },
+      oops:['定義外用參數 → 空值','自訂積木只屬於該角色','名字太籠統 → 用動詞開頭'],
+      tip:'勾「執行時不重新繪製畫面」→ 畫圖快很多。',
+      quest:{ q:`「畫正方形 邊長」是重複 4 次 { 移動 邊長 點、右轉 90 度 }。執行 ${st(`畫正方形 ${S('50')}`)}，總共移動幾點？`, a:['200','兩百','二百'], hint:'4 條邊，每條 50。' } }] },
+];
+const byId=Object.fromEntries(RAW.map(i=>[i.id,i]));
+// [島, 地圖位置 x,z, 地塊數, 前往下一站的交通工具]
+const PLAN=[
+  [byId.events, 25,-5, 4,'ship'],
+  [byId.motion, 31,-12,5,'plane'],
+  [byId.looks,  23, 5, 5,'ship'],
+  [byId.sound,  32,14, 7,'plane'],
+  [byId.loop,   15,-3, 7,'ship'],
+  [byId.sensing, 3, 5,12,'balloon'],
+  [byId.ops,     2,-14,9,'plane'],
+  [byId.vars,  -15,11,10,'balloon'],
+  [byId.if,    -24,-10,13,'ship'],
+  [byId.my,    -11,-22,7,null],
+];
+const ISLANDS=PLAN.map(([it,x,z,size,ride])=>({...it,x,z,size,ride,c:CAT[it.cat][0],cd:CAT[it.cat][1]}));
+const RIDE={ship:'船',plane:'飛機',balloon:'熱氣球'};
+
+// ================= 進度（每一區的每個段落都是一個檢查點） =================
+const KEY='scratch-world-progress';
+let done={}; try{ done=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){ done={}; }
+const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(done)); }catch(e){} };
+const SEC_NAME={concept:'觀念',blocks:'積木',example:'範例程式',code:'程式對照',quest:'島長任務'};
+const secsOf=tp=>['concept','blocks',...(tp.example?['example']:[]),...(tp.code?['code']:[]),'quest'].filter(s=>s!=='concept'||tp.concept);
+const ck=(it,tp,s)=>`${it.id}:${tp.id}:${s}`;
+function topicPct(it,tp){ const ss=secsOf(tp); return ss.filter(s=>done[ck(it,tp,s)]).length/ss.length; }
+function islandPct(it){ let a=0,b=0; it.topics.forEach(tp=>{ const ss=secsOf(tp); b+=ss.length; a+=ss.filter(s=>done[ck(it,tp,s)]).length; }); return b?a/b:0; }
+const P=x=>Math.round(x*100);
+function overall(){ let a=0,b=0; ISLANDS.forEach(it=>it.topics.forEach(tp=>{ const ss=secsOf(tp); b+=ss.length; a+=ss.filter(s=>done[ck(it,tp,s)]).length; })); return a/b; }
+function refreshGlobal(){
+  const n=ISLANDS.filter(it=>islandPct(it)>=1).length;
+  document.getElementById('progress').innerHTML=`完成 <b>${n}</b> / ${ISLANDS.length} 站 · 總進度 <b>${P(overall())}%</b>`;
+  ISLANDS.forEach(it=>{ if(!it.lbl) return; const p=P(islandPct(it));
+    it.lbl.querySelector('.done').textContent = p>=100?' ✓':` ${p}%`; it.lbl.querySelector('.bar i').style.width=p+'%'; });
+}
+document.getElementById('swatches').innerHTML=ISLANDS.map(it=>`<i style="background:${it.c}" title="${it.name}"></i>`).join('');
+
+// ================= 面板 =================
+const panel=document.getElementById('panel');
+let current=0, lang='py', zoomed=false, traveling=false; const topicSel={};
+try{ lang=localStorage.getItem('scratch-islands-lang')||'py'; }catch(e){}
+const norm=s=>String(s).trim().toLowerCase().replace(/\s+/g,'').replace(/[。．.！!]$/,'');
+const gotBtn=(s,on)=>`<div class="got"><button type="button" data-sec="${s}" aria-pressed="${on}">${on?'✓ 已看懂':'我看懂了'}</button></div>`;
+
+function renderPanel(idx){
+  const it=ISLANDS[idx], ti=topicSel[it.id]||0, tp=it.topics[ti], qz=tp.quest, isDone=s=>!!done[ck(it,tp,s)];
+  const nxt=ISLANDS[idx+1];
+  panel.style.setProperty('--c',it.c); panel.style.setProperty('--cd',it.cd);
+  const h3=(s,title)=>`<h3>${title||SEC_NAME[s]}<span class="h3s" data-h="${s}">${isDone(s)?'✓':''}</span></h3>`;
+  panel.innerHTML=`
+    <div class="ihead"><div class="chip"><i></i>第 ${idx+1} 站 · ${it.region} · 共 ${ISLANDS.length} 站</div><h2>${it.name}</h2>
+      <div class="prow"><div class="pbar" aria-label="本島進度"><i id="ibar"></i></div><span class="pct" id="ipct"></span></div></div>
+    <div id="finish"></div>
+    <p>${it.lead}</p>
+    <div class="learn">${it.learn.map(x=>`<span>${x}</span>`).join('')}</div>
+    <div class="sights"><h3>島上風景</h3><ul class="pts">${it.sights.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    ${it.topics.length>1?`<div class="tabs" role="tablist">${it.topics.map((t,k)=>`<button type="button" role="tab" aria-selected="${k===ti}" data-k="${k}">${t.name}<span class="tp" data-tp="${k}"></span></button>`).join('')}</div>`:''}
+    ${tp.concept?`<div>${h3('concept')}<ul class="pts">${tp.concept.map(x=>`<li>${x}</li>`).join('')}</ul>${gotBtn('concept',isDone('concept'))}</div>`:''}
+    <div>${h3('blocks',it.topics.length>1?tp.name+'的積木':'島上的積木')}
+      <div class="blocks">${tp.blocks.map(([b,d])=>`<div class="brow">${b}<small>${d}</small></div>`).join('')}</div>${gotBtn('blocks',isDone('blocks'))}</div>
+    ${tp.example?`<div>${h3('example')}<div class="script">${tp.example.script.join('')}</div><ol class="steps">${tp.example.steps.map(s=>`<li>${s}</li>`).join('')}</ol>${gotBtn('example',isDone('example'))}</div>`:''}
+    ${tp.code?`<div>${h3('code','換成文字程式語言')}<div class="codebox"><div class="langs" role="tablist"><button type="button" role="tab" data-l="py" aria-selected="${lang==='py'}">Python</button><button type="button" role="tab" data-l="js" aria-selected="${lang==='js'}">JavaScript</button></div><pre><code>${hl(tp.code[lang])}</code></pre></div>${gotBtn('code',isDone('code'))}</div>`:''}
+    ${tp.oops?`<div><h3>常見錯誤</h3><ul class="oops">${tp.oops.map(o=>`<li>${o}</li>`).join('')}</ul></div>`:''}
+    <div class="tip"><b>小技巧</b>　${tp.tip}</div>
+    <form class="quest" id="quest">
+      ${h3('quest')}
+      <div class="q">${qz.q}</div>
+      ${qz.choices
+        ? `<div class="choices">${qz.choices.map((c,k)=>`<button type="button" data-c="${k}">${c}</button>`).join('')}</div><div class="ans"><button type="button" class="ghost" id="hintBtn">提示</button></div>`
+        : `<div class="ans"><input id="answer-${it.id}-${tp.id}" autocomplete="off" placeholder="輸入答案" aria-label="答案"><button type="submit">檢查</button><button type="button" class="ghost" id="hintBtn">提示</button></div>`}
+      <div class="fb" id="fb">${isDone('quest')?'<span style="color:var(--ok)">✓ 這個任務已完成</span>':''}</div>
+    </form>
+    <div class="nav">${idx>0?`<button type="button" class="ghost" id="prev">← 回上一站</button>`:''}${nxt?`<button type="button" id="next"></button>`:''}</div>`;
+
+  const fb=panel.querySelector('#fb');
+  const mark=(s,on=true)=>{ const before=islandPct(it); if(on) done[ck(it,tp,s)]=true; else delete done[ck(it,tp,s)]; save(); refreshPanelProgress(idx); refreshGlobal();
+    if(before<1 && islandPct(it)>=1) panel.querySelector('#finish').scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'}); };
+  panel.querySelectorAll('.got button').forEach(b=>b.addEventListener('click',()=>{ const on=b.getAttribute('aria-pressed')!=='true';
+    b.setAttribute('aria-pressed',on); b.textContent=on?'✓ 已看懂':'我看懂了'; mark(b.dataset.sec,on); }));
+  const win=()=>{ fb.className='fb ok'; fb.textContent='答對了！任務完成'; mark('quest'); };
+  panel.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{ topicSel[it.id]=+b.dataset.k; renderPanel(idx); }));
+  panel.querySelectorAll('.langs button').forEach(b=>b.addEventListener('click',()=>{ lang=b.dataset.l; try{localStorage.setItem('scratch-islands-lang',lang);}catch(e){}
+    panel.querySelectorAll('.langs button').forEach(x=>x.setAttribute('aria-selected',x.dataset.l===lang)); panel.querySelector('pre code').innerHTML=hl(tp.code[lang]); }));
+  panel.querySelector('#quest').addEventListener('submit',e=>{
+    e.preventDefault(); if(qz.choices) return;
+    const val=norm(panel.querySelector('#quest input').value);
+    if(!val){ fb.className='fb bad'; fb.textContent='先輸入一個答案。'; return; }
+    if(qz.a.some(a=>norm(a)===val)) win(); else { fb.className='fb bad'; fb.textContent='還不對，再試一次，或按「提示」。'; }
+  });
+  panel.querySelectorAll('.choices button').forEach(b=>b.addEventListener('click',()=>{
+    panel.querySelectorAll('.choices button').forEach(x=>x.classList.remove('right','wrong'));
+    if(+b.dataset.c===qz.a){ b.classList.add('right'); win(); } else { b.classList.add('wrong'); fb.className='fb bad'; fb.textContent='不是這個，再想想看。'; }
+  }));
+  panel.querySelector('#hintBtn').addEventListener('click',()=>{ fb.className='fb'; fb.textContent='提示：'+qz.hint; });
+  const pv=panel.querySelector('#prev'); if(pv) pv.addEventListener('click',()=>request(idx-1));
+  const nx=panel.querySelector('#next'); if(nx) nx.addEventListener('click',()=>request(idx+1));
+  refreshPanelProgress(idx);
+}
+
+const leftOf=it=>it.topics.flatMap(t=>secsOf(t).filter(s=>!done[ck(it,t,s)]).map(s=>(it.topics.length>1?t.name+'・':'')+SEC_NAME[s]));
+function refreshPanelProgress(idx){
+  const it=ISLANDS[idx], ti=topicSel[it.id]||0, tp=it.topics[ti], p=P(islandPct(it));
+  panel.querySelector('#ibar').style.width=p+'%'; panel.querySelector('#ipct').textContent=p+'%';
+  panel.querySelectorAll('.tabs .tp').forEach(el=>{ const t=it.topics[+el.dataset.tp]; el.textContent=P(topicPct(it,t))+'%'; });
+  secsOf(tp).forEach(s=>{ const h=panel.querySelector(`[data-h="${s}"]`); if(h) h.textContent=done[ck(it,tp,s)]?'✓':''; });
+  const fin=panel.querySelector('#finish'), nxt=ISLANDS[idx+1];
+  if(p>=100){
+    fin.innerHTML=`<div class="finish"><b>${it.name}學完了！</b>${nxt?`<span>下一站是第 ${idx+2} 站「${nxt.name}」（${nxt.region}），這段路搭${RIDE[it.ride]}。</span><div class="nav"><button type="button" id="goNext">出發，前往${nxt.name}</button></div>`:'<span>十站全部完成，你已經環遊 Scratch 世界一圈了。</span>'}</div>`;
+    const g=fin.querySelector('#goNext'); if(g) g.addEventListener('click',()=>request(idx+1));
+  } else {
+    fin.innerHTML=`<div class="warnbox"><b>⚠ 本島尚未完成（${p}%）</b><ul>${leftOf(it).map(x=>`<li>${x}</li>`).join('')}</ul><span>每段按「我看懂了」、答對島長任務，就能完成。</span></div>`;
+  }
+  const nb=panel.querySelector('#next');
+  if(nb){ nb.classList.toggle('warnbtn',p<100); nb.textContent=(p<100?'⚠ 未完成・':'')+`搭${RIDE[it.ride]}前往第 ${idx+2} 站 ${nxt.name} →`; }
+}
+
+// ================= 跳島確認 =================
+const modal=document.getElementById('modal');
+function ask({title,body,pct,stay,go,color,warn},onGo){
+  modal.querySelector('.card').classList.toggle('warn',!!warn);
+  modal.querySelector('.card').style.setProperty('--c',color[0]); modal.querySelector('.card').style.setProperty('--cd',color[1]);
+  modal.querySelector('#mTitle').textContent=title; modal.querySelector('#mBody').innerHTML=body;
+  modal.querySelector('#mFill').style.width=pct+'%';
+  const s=modal.querySelector('#mStay'), g=modal.querySelector('#mGo'); s.textContent=stay; g.textContent=go;
+  modal.hidden=false; s.focus();
+  const close=()=>{ modal.hidden=true; s.onclick=g.onclick=null; };
+  s.onclick=()=>{ close(); if(!zoomed) select(current,true); };
+  g.onclick=()=>{ close(); onGo(); };
+}
+modal.addEventListener('click',e=>{ if(e.target===modal) modal.querySelector('#mStay').click(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!modal.hidden) modal.querySelector('#mStay').click(); });
+
+function request(j){
+  if(traveling || j<0 || j>=ISLANDS.length) return;
+  if(j===current){ select(j,true); return; }
+  const cur=ISLANDS[current], p=P(islandPct(cur)), tgt=ISLANDS[j];
+  const skipped=ISLANDS.slice(0,j).filter((it,k)=>k!==current && islandPct(it)<1).map(it=>it.name);
+  const go=()=>travel(current,j);
+  if(p<100){
+    ask({warn:true, title:`⚠ 警告：${cur.name}還沒學完（${p}%）`,
+      body:`<b>還差：</b><ul>${leftOf(cur).map(x=>`<li>${x}</li>`).join('')}</ul>後面的島會用到這裡的觀念，建議學到 100% 再出發。${skipped.length?`<br><b>前面也還沒學完：</b>${skipped.join('、')}`:''}`,
+      pct:p, stay:`留在${cur.name}繼續學`, go:'仍然出發', color:[cur.c,cur.cd]}, go);
+  } else if(j>current+1 || skipped.length){
+    ask({warn:true, title:`⚠ 要跳到第 ${j+1} 站「${tgt.name}」嗎？`,
+      body:`中間還有沒學完的島：${skipped.join('、')||'無'}。資訊課的順序是一站接一站，跳過的觀念之後可能會看不懂。`,
+      pct:p, stay:'先不要', go:'確定出發', color:[tgt.c,tgt.cd]}, go);
+  } else go();
+}
+
+// ================= 3D 世界地圖 =================
+const stage=document.getElementById('stage'), labelsEl=document.getElementById('labels'), ovBtn=document.getElementById('overviewBtn'), travelEl=document.getElementById('travel');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let three=null;
+const tok=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim()||'#888';
+function rng(seed){ return ()=>{ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+function initThree(){
+  if(!window.THREE) return;
+  const renderer=new THREE.WebGLRenderer({antialias:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.shadowMap.enabled=true;
+  stage.prepend(renderer.domElement);
+  const scene=new THREE.Scene(), camera=new THREE.PerspectiveCamera(40,1,0.1,600);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x88aabb,0.75));
+  const M=c=>new THREE.MeshStandardMaterial({color:c,roughness:.65});
+  const mats={sea:M(0),cliff:M(0),grass:M(0),sand:M(0),white:M(0xffffff),accent:M(0xff8c1a),flag:M(0x4cbf56),red:M(0xe2483d),
+    tree:M(0x3f8a4a),trunk:M(0x8a5a3b),wood:M(0xa0703f),route:new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.7})};
+  const catM={}; Object.keys(CAT).forEach(k=>catM[k]=[M(CAT[k][0]),M(CAT[k][1])]);
+  const sea=new THREE.Mesh(new THREE.CircleGeometry(400,64),mats.sea); sea.rotation.x=-Math.PI/2; sea.position.y=-.6; sea.receiveShadow=true; scene.add(sea);
+  function applyColors(){ scene.background=new THREE.Color(tok('--sea')); scene.fog=new THREE.Fog(tok('--sea'),80,220);
+    mats.sea.color.set(tok('--sea-deep')); mats.cliff.color.set(tok('--cliff')); mats.grass.color.set(tok('--grass')); mats.sand.color.set(tok('--sand')); }
+  applyColors();
+
+  const mesh=(g,m)=>{ const o=new THREE.Mesh(g,m); o.castShadow=true; return o; };
+  const box=(w,h,d,m)=>mesh(new THREE.BoxGeometry(w,h,d),m);
+  const cyl=(rt,rb,h,m,seg=16,ts,tl)=>mesh(new THREE.CylinderGeometry(rt,rb,h,seg,1,false,ts,tl),m);
+  const sph=(r,m)=>mesh(new THREE.SphereGeometry(r,14,14),m);
+  function tree(s){ const g=new THREE.Group(); const t=cyl(.06*s,.08*s,.3*s,mats.trunk,6); t.position.y=.15*s; const c=mesh(new THREE.ConeGeometry(.28*s,.7*s,7),mats.tree); c.position.y=.6*s; g.add(t,c); return g; }
+
+  const marks={
+    flag(m){ const g=new THREE.Group(); const p=cyl(.05,.05,1.9,mats.white,8); p.position.y=.95; const f=box(.8,.5,.05,mats.flag); f.position.set(.42,1.6,0);
+      const base=cyl(.5,.6,.25,m[0],6); base.position.y=.12; g.add(p,f,base); g.userData.anim=t=>{ f.rotation.y=Math.sin(t*3)*.25; }; return g; },
+    slider(m){ const g=new THREE.Group(); const track=box(2,.08,.3,m[1]); track.position.y=.08; const c=box(.45,.45,.45,m[0]); c.position.y=.35;
+      const ar=mesh(new THREE.ConeGeometry(.14,.3,8),mats.white); ar.rotation.z=-Math.PI/2; ar.position.set(.32,0,0); c.add(ar); g.add(track,c);
+      g.userData.anim=t=>{ c.position.x=Math.sin(t*1.4)*.75; c.rotation.y=Math.cos(t*1.4)>0?0:Math.PI; }; return g; },
+    mirror(m){ const g=new THREE.Group(); const ring=mesh(new THREE.TorusGeometry(.6,.09,10,32),m[0]); ring.position.y=.95; const stand=cyl(.06,.06,.4,m[1],8); stand.position.y=.2;
+      const s=sph(.3,m[1]); s.position.y=.95; g.add(ring,stand,s); g.userData.anim=t=>{ s.scale.setScalar(.8+Math.sin(t*2)*.25); ring.rotation.y=Math.sin(t*.8)*.6; }; return g; },
+    speaker(m){ const g=new THREE.Group(); const b=box(.7,1,.6,m[0]); b.position.y=.5; [.72,.32].forEach((y,k)=>{ const c=cyl(.2-k*.06,.2-k*.06,.05,m[1],20); c.rotation.x=Math.PI/2; c.position.set(0,y,.31); g.add(c); });
+      const notes=[sph(.11,mats.white),sph(.09,mats.white)]; notes.forEach((n,k)=>{ n.position.set(.55+k*.25,1,.1); g.add(n); }); g.add(b);
+      g.userData.anim=t=>{ notes.forEach((n,k)=>{ n.position.y=1+((t*.6+k*.5)%1)*.8; }); }; return g; },
+    loop(m){ const g=new THREE.Group(); const h=new THREE.Group(); const ring=mesh(new THREE.TorusGeometry(.65,.13,10,28,Math.PI*1.7),m[0]); ring.rotation.x=-Math.PI/2; ring.position.y=.5;
+      const head=mesh(new THREE.ConeGeometry(.22,.4,10),m[1]); head.position.set(.65,.5,0); head.rotation.x=Math.PI/2; h.add(ring,head); g.add(h); g.userData.anim=t=>{ h.rotation.y=-t*1.2; }; return g; },
+    fork(m){ const g=new THREE.Group(); const post=cyl(.07,.07,1.6,mats.wood,8); post.position.y=.8;
+      const a=box(.9,.22,.06,m[0]); a.position.set(.35,1.35,0); a.rotation.z=.15; const b=box(.9,.22,.06,m[1]); b.position.set(-.35,1.0,0); b.rotation.z=-.15;
+      const q=sph(.16,mats.accent); q.position.y=1.72; g.add(post,a,b,q); g.userData.anim=t=>{ q.position.y=1.72+Math.abs(Math.sin(t*2.2))*.2; }; return g; },
+    radar(m){ const g=new THREE.Group(); const post=cyl(.08,.12,.9,m[1],8); post.position.y=.45;
+      const dm=m[0].clone(); dm.side=THREE.DoubleSide; const dish=mesh(new THREE.SphereGeometry(.5,20,10,0,Math.PI*2,0,Math.PI/2.6),dm); dish.rotation.x=Math.PI*.7;
+      const head=new THREE.Group(); head.position.y=1; head.add(dish); const tip=sph(.07,mats.accent); tip.position.set(0,.2,.25); head.add(tip); g.add(post,head);
+      g.userData.anim=t=>{ head.rotation.y=t*.9; }; return g; },
+    plus(m){ const g=new THREE.Group(); const base=cyl(.6,.7,.3,mats.white,24); base.position.y=.15; const h=box(1.1,.32,.32,m[0]), vv=box(.32,1.1,.32,m[0]); h.position.y=vv.position.y=1.1;
+      const s=new THREE.Group(); s.add(h,vv); g.add(base,s); g.userData.anim=t=>{ s.rotation.y=t*.8; }; return g; },
+    crates(m){ const g=new THREE.Group(); const a=box(.6,.6,.6,m[0]); a.position.set(-.35,.3,0); const b=box(.6,.6,.6,catM.list[0]); b.position.set(.35,.3,.05);
+      const c=box(.55,.55,.55,m[1]); c.position.set(0,.9,0); g.add(a,b,c); g.userData.anim=t=>{ c.position.y=.9+Math.abs(Math.sin(t*1.6))*.3; c.rotation.y=t*.5; }; return g; },
+    puzzle(m){ const g=new THREE.Group(); const a=box(.9,.45,.5,m[0]); a.position.set(-.2,.25,0); const knob=cyl(.14,.14,.2,m[0],12); knob.position.set(.35,.25,0); knob.rotation.z=Math.PI/2;
+      const gear=mesh(new THREE.TorusGeometry(.32,.1,6,12),m[1]); gear.position.set(.3,.95,0); g.add(a,knob,gear); g.userData.anim=t=>{ gear.rotation.z=t*1.5; }; return g; },
+  };
+  const vehicles={
+    ship(){ const g=new THREE.Group(); const hull=box(.55,.28,1.4,mats.red); hull.position.y=.1; const deck=box(.5,.08,1.3,mats.white); deck.position.y=.27;
+      const cab=box(.4,.3,.45,mats.white); cab.position.set(0,.45,-.25); const mast=cyl(.03,.03,1,mats.wood,6); mast.position.set(0,.8,.25);
+      const sail=box(.04,.65,.55,mats.white); sail.position.set(0,.85,.45); g.add(hull,deck,cab,mast,sail); return g; },
+    plane(){ const g=new THREE.Group(); const body=cyl(.16,.12,1.5,mats.white,12); body.rotation.x=Math.PI/2; const nose=mesh(new THREE.ConeGeometry(.16,.35,12),mats.accent); nose.rotation.x=Math.PI/2; nose.position.z=.92;
+      const wing=box(1.8,.05,.4,mats.white); wing.position.z=.1; const tail=box(.6,.05,.22,mats.white); tail.position.z=-.65; const fin=box(.05,.35,.25,mats.accent); fin.position.set(0,.2,-.65);
+      g.add(body,nose,wing,tail,fin); return g; },
+    balloon(){ const g=new THREE.Group(); const env=sph(.6,mats.accent); env.scale.y=1.15; env.position.y=1.2; const band=mesh(new THREE.TorusGeometry(.6,.05,6,24),mats.white); band.rotation.x=Math.PI/2; band.position.y=1.2;
+      const basket=box(.32,.25,.32,mats.wood); basket.position.y=.15; [[-.13,-.13],[.13,-.13],[-.13,.13],[.13,.13]].forEach(([x,z])=>{ const l=cyl(.012,.012,.7,mats.trunk,4); l.position.set(x,.6,z); g.add(l); });
+      g.add(env,band,basket); return g; },
+  };
+
+  // ---------- 島上的建築、人物、物件 ----------
+  mats.skin=M(0xf1c7a0); mats.glass=M(0xbfe8ff);
+  const anims=[];
+  const withAnim=(g,f)=>{ g.userData.anim=f; return g; };
+  function person(c,hatC){ const g=new THREE.Group(); const body=mesh(new THREE.CylinderGeometry(.09,.15,.4,10),M(c)); body.position.y=.2; const head=sph(.11,mats.skin); head.position.y=.5;
+    g.add(body,head); if(hatC){ const h=cyl(.12,.12,.06,M(hatC),10); h.position.y=.6; g.add(h); } g.userData.body=body; return g; }
+  function house(wall,roof,w=.8,h=.6){ const g=new THREE.Group(); const b=box(w,h,w*.8,wall); b.position.y=h/2; const r=mesh(new THREE.ConeGeometry(w*.72,h*.7,4),roof); r.position.y=h+h*.35; r.rotation.y=Math.PI/4;
+    const d=box(.16,.28,.02,mats.wood); d.position.set(0,.14,w*.4+.01); const win=box(.16,.14,.02,mats.glass); win.position.set(w*.25,h*.62,w*.4+.01); g.add(b,r,d,win); return g; }
+  const DECOR={
+    events:[
+      m=>{ const g=new THREE.Group(); for(let k=0;k<4;k++){ const c=cyl(.26-k*.03,.29-k*.03,.35,k%2?mats.red:mats.white,14); c.position.y=.18+k*.35; g.add(c); }
+        const lampM=M(0xffe08a); const lamp=sph(.17,lampM); lamp.position.y=1.6; const cap=mesh(new THREE.ConeGeometry(.22,.25,12),mats.red); cap.position.y=1.85; g.add(lamp,cap);
+        return withAnim(g,t=>{ lampM.emissive.setRGB(.9,.6,.1).multiplyScalar(.4+.4*Math.sin(t*3)); }); },
+      m=>{ const g=new THREE.Group(); const tw=box(.45,1.2,.45,m[1]); tw.position.y=.6; const roof=mesh(new THREE.ConeGeometry(.4,.4,4),m[0]); roof.position.y=1.42; roof.rotation.y=Math.PI/4;
+        const bell=mesh(new THREE.SphereGeometry(.14,12,10,0,Math.PI*2,0,Math.PI/1.6),M(0xd9a520)); const piv=new THREE.Group(); piv.position.set(0,1.05,.24); bell.position.y=-.1; piv.add(bell); g.add(tw,roof,piv);
+        return withAnim(g,t=>{ piv.rotation.x=Math.sin(t*4)*.4; }); },
+      m=>{ const g=person(0x2f6fdb,0xffffff); const arm=box(.05,.3,.05,mats.skin); const sh=new THREE.Group(); sh.position.set(.14,.36,0); arm.position.y=.15; sh.add(arm);
+        const fl=box(.18,.12,.01,mats.flag); fl.position.set(.08,.3,0); sh.add(fl); g.add(sh); return withAnim(g,t=>{ sh.rotation.z=-.4-Math.abs(Math.sin(t*3))*.8; }); },
+    ],
+    motion:[
+      m=>{ const g=new THREE.Group(); for(let a=-1;a<=1;a++) for(let b=-1;b<=1;b++){ const tl=box(.26,.04,.26,(a+b)%2?mats.white:m[0]); tl.position.set(a*.27,.02,b*.27); g.add(tl); } return g; },
+      m=>{ const g=new THREE.Group(); const p=cyl(.04,.04,1,mats.wood,6); p.position.y=.5; g.add(p);
+        [[0,.85,m[0]],[Math.PI/2,.65,m[1]],[Math.PI,.45,mats.white]].forEach(([r,y,mm])=>{ const s=new THREE.Group(); s.position.y=y; s.rotation.y=r; const bd=box(.45,.12,.03,mm); bd.position.x=.22; const tip=mesh(new THREE.ConeGeometry(.08,.14,3),mm); tip.rotation.z=-Math.PI/2; tip.position.x=.5; s.add(bd,tip); g.add(s); });
+        return g; },
+      m=>{ const g=new THREE.Group(); const r=person(0xff5a5a); g.add(r); return withAnim(g,t=>{ r.position.x=Math.sin(t*1.6)*.35; r.rotation.y=Math.cos(t*1.6)>0?Math.PI/2:-Math.PI/2; r.position.y=Math.abs(Math.sin(t*8))*.06; }); },
+    ],
+    looks:[
+      m=>{ const g=house(mats.white,m[0],.95,.7); const cur=box(.6,.45,.03,mats.red); cur.position.set(0,.3,.4); const sign=box(.5,.14,.03,m[1]); sign.position.set(0,.8,.39); g.add(cur,sign); return g; },
+      m=>{ const g=new THREE.Group(); const cm=M(0xff66aa); const a=person(0xffffff); a.userData.body.material=cm; g.add(a); return withAnim(g,t=>{ cm.color.setHSL((t*.15)%1,.75,.55); a.scale.setScalar(1+Math.sin(t*1.5)*.15); }); },
+      m=>{ const g=new THREE.Group(); const rack=box(.6,.04,.04,mats.wood); rack.position.y=.6; [-.28,.28].forEach(x=>{ const l=cyl(.02,.02,.6,mats.wood,6); l.position.set(x,.3,0); g.add(l); });
+        [0xff6680,0x4c97ff,0xffbf00].forEach((c,k)=>{ const d=box(.14,.3,.06,M(c)); d.position.set(-.18+k*.18,.42,0); g.add(d); }); g.add(rack); return g; },
+    ],
+    sound:[
+      m=>{ const g=new THREE.Group(); const hall=cyl(.5,.55,.5,m[0],16); hall.position.y=.25; const dome=mesh(new THREE.SphereGeometry(.5,16,8,0,Math.PI*2,0,Math.PI/2),mats.white); dome.position.y=.5; g.add(hall,dome); return g; },
+      m=>{ const g=new THREE.Group(); const d=cyl(.3,.3,.32,mats.white,18); d.position.y=.16; const band=cyl(.31,.31,.08,mats.red,18); band.position.y=.16; g.add(d,band); return withAnim(g,t=>{ const s=1+Math.max(0,Math.sin(t*6))*.08; d.scale.set(s,1,s); }); },
+      m=>{ const g=new THREE.Group(); const a=person(0xcf63cf), b=person(0xffbf00); a.position.x=-.2; b.position.x=.2; g.add(a,b);
+        return withAnim(g,t=>{ a.position.y=Math.abs(Math.sin(t*4))*.18; b.position.y=Math.abs(Math.cos(t*4))*.18; a.rotation.y=t*2; b.rotation.y=-t*2; }); },
+    ],
+    loop:[
+      m=>{ const g=new THREE.Group(); const wheel=new THREE.Group(); wheel.position.y=1.05; const ring=mesh(new THREE.TorusGeometry(.75,.04,8,36),m[0]); wheel.add(ring);
+        for(let k=0;k<8;k++){ const a=k/8*Math.PI*2; const sp=box(.03,.75,.03,mats.white); sp.position.set(Math.cos(a)*.37,Math.sin(a)*.37,0); sp.rotation.z=a+Math.PI/2; wheel.add(sp);
+          const cab=box(.16,.14,.16,[mats.red,catM.motion[0],catM.events[0],catM.my[0]][k%4]); cab.position.set(Math.cos(a)*.75,Math.sin(a)*.75-.1,0); cab.userData.a=a; wheel.add(cab); }
+        const legs=[-.25,.25].map(x=>{ const l=box(.06,1.1,.06,m[1]); l.position.set(x,.55,0); l.rotation.z=x>0?-.2:.2; return l; }); g.add(wheel,...legs);
+        return withAnim(g,t=>{ wheel.rotation.z=t*.5; wheel.children.forEach(c=>{ if(c.userData.a!==undefined) c.rotation.z=-t*.5; }); }); },
+      m=>{ const g=new THREE.Group(); const base=cyl(.45,.45,.08,mats.white,16); base.position.y=.04; const roof=mesh(new THREE.ConeGeometry(.5,.3,16),m[0]); roof.position.y=.8;
+        const spin=new THREE.Group(); for(let k=0;k<6;k++){ const a=k/6*Math.PI*2; const pole=cyl(.015,.015,.65,mats.white,4); pole.position.set(Math.cos(a)*.33,.4,Math.sin(a)*.33);
+          const horse=box(.08,.1,.18,[mats.red,catM.looks[0],catM.ops[0]][k%3]); horse.position.set(Math.cos(a)*.33,.32,Math.sin(a)*.33); horse.userData.k=k; spin.add(pole,horse); }
+        g.add(base,roof,spin); return withAnim(g,t=>{ spin.rotation.y=t*.9; spin.children.forEach(c=>{ if(c.userData.k!==undefined) c.position.y=.32+Math.sin(t*3+c.userData.k)*.06; }); }); },
+      m=>{ const g=new THREE.Group(); const ps=[0,1,2].map(k=>{ const p=person([0x4c97ff,0xff8c1a,0x59c059][k]); p.position.x=-.3+k*.3; g.add(p); return p; });
+        return withAnim(g,t=>{ ps.forEach((p,k)=>{ p.position.y=Math.max(0,Math.sin(t*3-k*.8))*.12; }); }); },
+    ],
+    sensing:[
+      m=>{ const g=new THREE.Group(); const b=cyl(.45,.45,.45,mats.white,18); b.position.y=.22; const dome=mesh(new THREE.SphereGeometry(.45,18,8,0,Math.PI*2,0,Math.PI/2),m[0]); dome.position.y=.45;
+        const tel=cyl(.06,.08,.6,m[1],8); const tp=new THREE.Group(); tp.position.y=.7; tel.rotation.x=Math.PI/3; tel.position.z=.15; tp.add(tel); g.add(b,dome,tp); return withAnim(g,t=>{ tp.rotation.y=t*.4; }); },
+      m=>{ const g=new THREE.Group(); [[-.2,-.2],[.2,-.2],[-.2,.2],[.2,.2]].forEach(([x,z])=>{ const l=cyl(.03,.03,1,mats.wood,6); l.position.set(x,.5,z); g.add(l); });
+        const pl=box(.55,.06,.55,mats.wood); pl.position.y=1; const roof=mesh(new THREE.ConeGeometry(.42,.3,4),m[1]); roof.position.y=1.55; roof.rotation.y=Math.PI/4;
+        const guard=person(0x2e8eb8); guard.position.y=1.03; guard.scale.setScalar(.8); g.add(pl,roof,guard); return withAnim(g,t=>{ guard.rotation.y=Math.sin(t*.8)*1.5; }); },
+      m=>{ const g=new THREE.Group(); const p=person(0x5cb1d6,0x2e8eb8); const bin=box(.18,.08,.08,mats.trunk); bin.position.set(0,.5,.12); p.add(bin); g.add(p); return withAnim(g,t=>{ p.rotation.y=t*.7; }); },
+    ],
+    ops:[
+      m=>{ const g=new THREE.Group(); [-.4,.4].forEach(x=>{ const s=box(.06,.7,.06,mats.wood); s.position.set(x,.35,0); g.add(s); });
+        const beads=[]; for(let r=0;r<3;r++){ const rod=cyl(.015,.015,.8,mats.wood,4); rod.rotation.z=Math.PI/2; rod.position.y=.2+r*.2; g.add(rod);
+          for(let k=0;k<4;k++){ const b=sph(.05,[m[0],mats.red,mats.white][r]); b.position.set(-.25+k*.1,.2+r*.2,0); b.userData={r,k}; beads.push(b); g.add(b); } }
+        return withAnim(g,t=>{ beads.forEach(b=>{ const {r,k}=b.userData; const push=(Math.sin(t*1.2+r)+1)/2; b.position.x=-.25+k*.1+(k>=2?push*.2:0); }); }); },
+      m=>{ const g=house(mats.white,m[1],.85,.6); const sg=box(.12,.4,.04,m[0]), sg2=box(.4,.12,.04,m[0]); sg.position.set(0,1.25,0); sg2.position.set(0,1.25,0); g.add(sg,sg2); return g; },
+      m=>{ const g=new THREE.Group(); const p=person(0x59c059,0x222222); const board=box(.4,.3,.03,mats.white); board.position.set(.35,.4,0); const leg=cyl(.015,.015,.4,mats.wood,4); leg.position.set(.35,.2,0); g.add(p,board,leg);
+        return withAnim(g,t=>{ p.rotation.y=Math.sin(t*1.3)*.5+Math.PI/2; }); },
+    ],
+    vars:[
+      m=>{ const g=new THREE.Group(); const b=box(1.1,.6,.8,m[1]); b.position.y=.3; const roof=box(1.2,.08,.9,mats.white); roof.position.y=.64; const door=box(.4,.4,.02,mats.white); door.position.set(0,.2,.41);
+        const lab=box(.5,.12,.02,m[0]); lab.position.set(0,.5,.41); g.add(b,roof,door,lab); return g; },
+      m=>{ const g=new THREE.Group(); const mast=box(.08,1.4,.08,catM.events[0]); mast.position.y=.7; const arm=new THREE.Group(); arm.position.y=1.4; const beam=box(1,.06,.06,catM.events[0]); beam.position.x=.3;
+        const cable=cyl(.01,.01,.4,mats.trunk,4); cable.position.set(.7,-.2,0); const crate=box(.18,.18,.18,m[0]); crate.position.set(.7,-.45,0); arm.add(beam,cable,crate); g.add(mast,arm);
+        return withAnim(g,t=>{ arm.rotation.y=t*.5; crate.position.y=-.45+Math.sin(t*1.5)*.1; }); },
+      m=>{ const g=new THREE.Group(); const fr=box(.9,.05,.25,mats.wood); fr.position.y=.45; const fr2=fr.clone(); fr2.position.y=.05;
+        [-.44,.44].forEach(x=>{ const s=box(.04,.5,.25,mats.wood); s.position.set(x,.25,0); g.add(s); });
+        for(let k=0;k<4;k++){ const c=box(.17,.17,.17,k%2?catM.list[0]:m[0]); c.position.set(-.3+k*.2,.17,0); g.add(c); } g.add(fr,fr2); return g; },
+    ],
+    if:[
+      m=>{ const g=new THREE.Group(); const p=cyl(.04,.04,1.1,mats.trunk,6); p.position.y=.55; const hd=box(.2,.5,.16,mats.trunk); hd.position.y=1.25;
+        const lights=[0xe2483d,0xffbf00,0x4cbf56].map((c,k)=>{ const mm=M(c); const s=sph(.06,mm); s.position.set(0,1.42-k*.16,.09); g.add(s); return mm; }); g.add(p,hd);
+        return withAnim(g,t=>{ const on=Math.floor(t/1.2)%3; lights.forEach((mm,k)=>{ mm.emissive.copy(mm.color).multiplyScalar(k===[2,1,0][on]?.9:0); }); }); },
+      m=>{ const g=new THREE.Group(); [-.4,.4].forEach(x=>{ const s=box(.1,.5,.1,m[1]); s.position.set(x,.25,0); g.add(s); });
+        const piv=new THREE.Group(); piv.position.set(-.4,.42,0); const bar=box(.8,.05,.05,mats.red); bar.position.x=.4; piv.add(bar); g.add(piv);
+        return withAnim(g,t=>{ piv.rotation.z=Math.max(0,Math.sin(t*.9))*1.2; }); },
+      m=>{ const g=new THREE.Group(); const p=person(0xffab19,0x333333); g.add(p); return withAnim(g,t=>{ p.rotation.y=Math.round(Math.sin(t*.7))*.9; }); },
+      m=>house(M(0xf3e6c8),m[0],.8,.55),
+    ],
+    my:[
+      m=>{ const g=new THREE.Group(); const b=box(1,.55,.7,m[0]); b.position.y=.28; const saw=new THREE.Group(); for(let k=0;k<3;k++){ const r=mesh(new THREE.ConeGeometry(.2,.25,4,1),mats.white); r.rotation.y=Math.PI/4; r.position.set(-.33+k*.33,.68,0); saw.add(r); }
+        const ch=cyl(.07,.08,.6,mats.trunk,8); ch.position.set(.35,.9,-.2); const smoke=[0,1,2].map(k=>{ const s=sph(.08,M(0xdddddd)); s.userData.k=k; g.add(s); return s; }); g.add(b,saw,ch);
+        return withAnim(g,t=>{ smoke.forEach(s=>{ const u=(t*.4+s.userData.k/3)%1; s.position.set(.35+u*.2,1.2+u*.6,-.2); s.scale.setScalar(.6+u); }); }); },
+      m=>{ const g=new THREE.Group(); const a=mesh(new THREE.TorusGeometry(.25,.07,6,10),m[1]), b=mesh(new THREE.TorusGeometry(.18,.06,6,8),catM.events[0]); a.position.set(-.15,.45,0); b.position.set(.25,.38,0); g.add(a,b);
+        return withAnim(g,t=>{ a.rotation.z=t; b.rotation.z=-t*1.4; }); },
+      m=>{ const g=new THREE.Group(); const belt=box(1.1,.1,.3,mats.trunk); belt.position.y=.2; g.add(belt); const items=[0,1,2].map(k=>{ const c=box(.12+k*.04,.12+k*.04,.12+k*.04,m[0]); g.add(c); return c; });
+        return withAnim(g,t=>{ items.forEach((c,k)=>{ const u=(t*.25+k/3)%1; c.position.set(-.5+u,.3+c.geometry.parameters.height/2-.06,0); }); }); },
+    ],
+  };
+
+  // 每座島 = 一群六角地塊，大小依世界地圖的陸地比例
+  const SC=1.6, T=1.0, W=Math.sqrt(3)*T, NB=[[1,0],[-1,0],[0,1],[0,-1],[1,-1],[-1,1]];
+  const pick=[], groups=[];
+  ISLANDS.forEach((it,i)=>{
+    const g=new THREE.Group(); g.position.set(it.x,0,it.z);
+    const rnd=rng(i*97+13), tiles=[[0,0]], has=new Set(['0,0']);
+    while(tiles.length<it.size){ const [q,r]=tiles[Math.floor(rnd()*tiles.length)], [dq,dr]=NB[Math.floor(rnd()*6)], k=(q+dq)+','+(r+dr);
+      if(!has.has(k)){ has.add(k); tiles.push([q+dq,r+dr]); } }
+    let ext=0; const dec=DECOR[it.id]||[], spots=[];
+    tiles.forEach(([q,r],n)=>{
+      const x=W*(q+r/2), z=1.5*T*r; ext=Math.max(ext,Math.hypot(x,z));
+      const inner=NB.every(([dq,dr])=>has.has((q+dq)+','+(r+dr)));
+      const top=n===0?.25:(inner?.35+rnd()*.35:.15+rnd()*.15);
+      const t=new THREE.Group(); t.position.set(x,0,z);
+      const cliff=cyl(T*.99,T*.92,.9+top,mats.cliff,6); cliff.position.y=-.6+(.9+top)/2-.15; cliff.receiveShadow=true;
+      const rim=cyl(T,T,.1,catM[it.cat][0],6); rim.position.y=top-.08; rim.receiveShadow=true;
+      const turf=cyl(T*.86,T*.86,.1,inner?mats.grass:mats.sand,6); turf.position.y=top-.03; turf.receiveShadow=true;
+      t.add(cliff,rim,turf);
+      if(n>0 && n<=dec.length) spots.push([x,z,top]);
+      if(n>dec.length && rnd()<.75){ const nT=1+Math.floor(rnd()*2); for(let k=0;k<nT;k++){ const tr=tree(.7+rnd()*.4); tr.position.set((rnd()-.5)*.9,top,(rnd()-.5)*.9); t.add(tr);} }
+      g.add(t);
+    });
+    const lm=marks[it.mark](catM[it.cat]); lm.position.y=.27; g.add(lm);
+    dec.forEach((fn,k)=>{ if(!spots[k]) return; const o=fn(catM[it.cat]); const [x,z,top]=spots[k]; o.position.set(x,top,z); o.rotation.y=Math.atan2(-x,-z)+Math.PI; g.add(o); if(o.userData.anim) anims.push(o.userData.anim); });
+    g.traverse(o=>{ if(o.isMesh){ o.userData.idx=i; pick.push(o);} });
+    g.scale.setScalar(SC);
+    g.userData={lm,phase:i*.9,ext:(ext+T)*SC}; scene.add(g); groups.push(g);
+    const lbl=document.createElement('button'); lbl.className='lbl'; lbl.type='button';
+    lbl.style.setProperty('--c',it.c); lbl.style.setProperty('--cd',it.cd);
+    lbl.innerHTML=`<span class="n">${i+1}</span>${it.name}<span class="rg">${it.region}</span><span class="done"></span><span class="bar"><i></i></span>`;
+    lbl.addEventListener('click',()=>request(i));
+    labelsEl.appendChild(lbl); it.lbl=lbl;
+  });
+
+  // 把海縮小：保留相對方位，讓島靠緊（島與島之間只留一條航道）
+  (function pack(){
+    const tg=ISLANDS.map(it=>({x:it.x*.55,z:it.z*.55})), P=tg.map(p=>({...p})), GAP=2.2;
+    for(let n=0;n<600;n++){
+      P.forEach((p,i)=>{ p.x+=(tg[i].x-p.x)*.04; p.z+=(tg[i].z-p.z)*.04; });
+      for(let i=0;i<P.length;i++) for(let j=i+1;j<P.length;j++){
+        const dx=P[j].x-P[i].x, dz=P[j].z-P[i].z, d=Math.hypot(dx,dz)||.01, need=groups[i].userData.ext+groups[j].userData.ext+GAP;
+        if(d<need){ const k=(need-d)/2/d; P[i].x-=dx*k; P[i].z-=dz*k; P[j].x+=dx*k; P[j].z+=dz*k; }
+      }
+    }
+    groups.forEach((g,i)=>g.position.set(P[i].x,0,P[i].z));
+  })();
+
+  // 航線：船貼著海面、熱氣球中空、飛機高空
+  const HEIGHT={ship:-.45,balloon:3.5,plane:7};
+  function legCurve(a,b,ride){
+    const A=groups[a].position, B=groups[b].position, dir=new THREE.Vector3(B.x-A.x,0,B.z-A.z).normalize();
+    const p0=new THREE.Vector3(A.x,0,A.z).addScaledVector(dir,groups[a].userData.ext*.85), p2=new THREE.Vector3(B.x,0,B.z).addScaledVector(dir,-groups[b].userData.ext*.85);
+    const y=HEIGHT[ride]; p0.y=p2.y=ride==='ship'?-.45:.6;
+    const mid=p0.clone().lerp(p2,.5); const perp=new THREE.Vector3(-dir.z,0,dir.x).multiplyScalar(ride==='ship'?p0.distanceTo(p2)*.18:0);
+    mid.add(perp); mid.y=ride==='ship'?-.45:y*2-.6;
+    return new THREE.QuadraticBezierCurve3(p0,mid,p2);
+  }
+  const dotG=new THREE.SphereGeometry(.1,8,8), parked=[];
+  for(let i=0;i<groups.length-1;i++){
+    const ride=ISLANDS[i].ride, c=legCurve(i,i+1,ride), len=c.getLength(), n=Math.round(len*1.6);
+    for(let k=1;k<n;k++){ const d=new THREE.Mesh(dotG,mats.route); d.position.copy(c.getPoint(k/n)); if(ride==='ship') d.position.y=-.5; scene.add(d); }
+    const v=vehicles[ride](); v.scale.setScalar(1.4); const u=.5; v.position.copy(c.getPoint(u)); v.lookAt(c.getPoint(u+.02)); v.userData={curve:c,u,ride};
+    scene.add(v); parked.push(v);
+  }
+  const traveler=new THREE.Group(); scene.add(traveler); traveler.visible=false;
+
+  // 地圖範圍
+  const box3=new THREE.Box3(); groups.forEach(g=>{ box3.expandByPoint(g.position.clone().addScalar(g.userData.ext)); box3.expandByPoint(g.position.clone().addScalar(-g.userData.ext)); });
+  const center=box3.getCenter(new THREE.Vector3()); center.y=0; const size=box3.getSize(new THREE.Vector3());
+  const sun=new THREE.DirectionalLight(0xffffff,.75); sun.position.copy(center).add(new THREE.Vector3(14,34,10)); sun.target.position.copy(center); sun.castShadow=true;
+  sun.shadow.mapSize.set(2048,2048); Object.assign(sun.shadow.camera,{left:-size.x/2-4,right:size.x/2+4,top:size.z/2+4,bottom:-size.z/2-4,far:120}); scene.add(sun,sun.target);
+
+  // 相機
+  let az=0, el=1.05, dist=60, distGoal=60, elGoal=1.05, dragging=false;
+  const target=center.clone(), goal=center.clone();
+  const fovT=Math.tan(THREE.MathUtils.degToRad(20));
+  const overDist=()=>{ const a=camera.aspect||1; return Math.max(size.x/2/(fovT*a), size.z/2*Math.sin(1.05)/fovT)*1.04; };
+  const zoomDist=i=>Math.max(10, groups[i].userData.ext*2.5)*(stage.clientWidth<520?1.35:1);
+  const placeCam=()=>{ camera.position.set(target.x+dist*Math.sin(az)*Math.cos(el),target.y+dist*Math.sin(el),target.z+dist*Math.cos(az)*Math.cos(el)); camera.lookAt(target); };
+  function resize(){ const w=stage.clientWidth,h=stage.clientHeight; renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); if(!zoomed&&!traveling) distGoal=overDist(); }
+  new ResizeObserver(resize).observe(stage); resize(); dist=distGoal;
+
+  const ray=new THREE.Raycaster(), ndc=new THREE.Vector2(), cv=renderer.domElement;
+  let down=null,lx=0,ly=0,moved=0;
+  cv.addEventListener('pointerdown',e=>{ down=e.pointerId; lx=e.clientX; ly=e.clientY; moved=0; dragging=true; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove',e=>{ if(down!==e.pointerId) return; const dx=e.clientX-lx, dy=e.clientY-ly; moved+=Math.abs(dx)+Math.abs(dy);
+    az-=dx*.008; el=Math.min(1.45,Math.max(.3,el+dy*.006)); elGoal=el; lx=e.clientX; ly=e.clientY; });
+  const end=e=>{ if(down!==e.pointerId) return; down=null; dragging=false;
+    if(moved<8 && e.type==='pointerup'){ const r=cv.getBoundingClientRect(); ndc.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
+      ray.setFromCamera(ndc,camera); const hit=ray.intersectObjects(pick,false)[0]; if(hit) request(hit.object.userData.idx); } };
+  cv.addEventListener('pointerup',end); cv.addEventListener('pointercancel',end);
+  cv.addEventListener('wheel',e=>{ e.preventDefault(); distGoal=Math.min(260,Math.max(6,distGoal*(1+e.deltaY*.0012))); },{passive:false});
+
+  let trip=null;
+  const tmp=new THREE.Vector3(), clock=new THREE.Clock();
+  (function frame(){
+    const t=clock.getElapsedTime(), k=reduce?1:.06;
+    if(trip){
+      const u=Math.min(1,(t-trip.t0)/trip.dur), e=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
+      const p=trip.curve.getPoint(e); traveler.position.copy(p); if(trip.ride==='ship') traveler.position.y=-.55+Math.sin(t*4)*.05;
+      traveler.lookAt(trip.curve.getPoint(Math.min(1,e+.01)).setY(trip.ride==='ship'?traveler.position.y:trip.curve.getPoint(Math.min(1,e+.01)).y));
+      if(trip.ride==='plane') traveler.rotateZ(Math.sin(e*Math.PI)*.25);
+      goal.copy(p); goal.y=Math.max(0,p.y*.6);
+      if(u>=1){ const to=trip.to; trip=null; traveler.visible=false; traveling=false; travelEl.hidden=true; arrive(to); }
+    }
+    target.lerp(goal,trip?.12:k); dist+=(distGoal-dist)*k; if(!dragging) el+=(elGoal-el)*k;
+    if(scene.fog){ scene.fog.near=dist*1.2; scene.fog.far=dist*3; }
+    placeCam();
+    const w=stage.clientWidth,h=stage.clientHeight;
+    groups.forEach((g,i)=>{
+      g.position.y+=(((i===current&&zoomed)?.25:0)+(reduce?0:Math.sin(t*1.1+g.userData.phase)*.05)-g.position.y)*.1;
+      if(!reduce && g.userData.lm.userData.anim) g.userData.lm.userData.anim(t);
+      tmp.set(g.position.x,g.position.y+3.6,g.position.z).project(camera);
+      const l=ISLANDS[i].lbl, off=tmp.z>1||Math.abs(tmp.x)>1.15||Math.abs(tmp.y)>1.15;
+      l.hidden=off; if(!off){ l.style.left=((tmp.x+1)/2*w)+'px'; l.style.top=((1-tmp.y)/2*h)+'px'; l.style.zIndex=String(Math.round((1-tmp.z)*1000)); }
+    });
+    if(!reduce) anims.forEach(f=>f(t));
+    if(!reduce) parked.forEach((v,n)=>{ const d=v.userData; const u=.5+Math.sin(t*.4+n)*.06; v.position.copy(d.curve.getPoint(u)); if(d.ride==='ship') v.position.y=-.55+Math.sin(t*3+n)*.05; else v.position.y+=Math.sin(t*1.5+n)*.15;
+      v.lookAt(d.curve.getPoint(u+.01).setY(v.position.y)); v.visible=!(trip&&trip.leg===n); });
+    renderer.render(scene,camera); requestAnimationFrame(frame);
+  })();
+
+  three={
+    focus(i,zoom){
+      if(zoom){ const p=groups[i].position; goal.set(p.x,.6,p.z); distGoal=zoomDist(i); elGoal=.62; }
+      else { goal.copy(center); distGoal=overDist(); elGoal=1.05; }
+    },
+    travel(from,to){
+      const adj=Math.abs(to-from)===1, a=Math.min(from,to), ride=adj?ISLANDS[a].ride:'plane';
+      let curve=legCurve(from,to,ride);
+      traveler.clear(); const vh=vehicles[ride](); vh.scale.setScalar(1.6); traveler.add(vh); traveler.visible=true;
+      const dur=reduce?.01:Math.min(5,Math.max(2.4,curve.getLength()/9));
+      trip={curve,ride,to,t0:clock.getElapsedTime(),dur,leg:adj?a:-1};
+      distGoal=ride==='plane'?34:24; elGoal=ride==='ship'?.55:.75;
+      return ride;
+    }
+  };
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>setTimeout(applyColors,0));
+  new MutationObserver(applyColors).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+}
+
+function travel(from,to){
+  if(!three){ select(to,true); return; }
+  traveling=true; zoomed=false; ovBtn.hidden=true;
+  const ride=three.travel(from,to);
+  travelEl.textContent=`搭${RIDE[ride]}前往第 ${to+1} 站 ${ISLANDS[to].name}（${ISLANDS[to].region}）…`; travelEl.hidden=false;
+  ISLANDS.forEach((it,k)=>it.lbl&&it.lbl.classList.toggle('on',k===to));
+  if(innerWidth<960) stage.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
+}
+function arrive(to){
+  select(to,true);
+  if(innerWidth<960) setTimeout(()=>panel.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'}),900);
+}
+function select(i,zoom){
+  current=i; zoomed=!!zoom&&!!three;
+  ISLANDS.forEach((it,k)=>it.lbl&&it.lbl.classList.toggle('on',k===i));
+  if(three) three.focus(i,zoomed);
+  ovBtn.hidden=!zoomed;
+  renderPanel(i); refreshGlobal();
+}
+ovBtn.addEventListener('click',()=>{ if(traveling) return; zoomed=false; ovBtn.hidden=true; if(three) three.focus(current,false); });
+
+try{ initThree(); }catch(e){ console.error(e); three=null; }
+if(!three){
+  Object.assign(labelsEl.style,{position:'static',display:'flex',flexWrap:'wrap',gap:'8px',padding:'16px'});
+  Object.assign(stage.style,{height:'auto',minHeight:'0'});
+  document.getElementById('hint').hidden=true;
+  labelsEl.innerHTML='';
+  ISLANDS.forEach((it,i)=>{ const b=document.createElement('button'); b.className='lbl'; b.type='button';
+    Object.assign(b.style,{position:'static',transform:'none'}); b.style.setProperty('--c',it.c); b.style.setProperty('--cd',it.cd);
+    b.innerHTML=`<span class="n">${i+1}</span>${it.name}<span class="rg">${it.region}</span><span class="done"></span><span class="bar"><i></i></span>`; b.onclick=()=>request(i); labelsEl.appendChild(b); it.lbl=b; });
+}
+// 回到上次學到的島
+let start=0; for(let i=0;i<ISLANDS.length;i++){ if(islandPct(ISLANDS[i])<1){ start=i; break; } if(i===ISLANDS.length-1) start=i; }
+select(start,false);
+
+</script>
+
+</body>
+</html>
