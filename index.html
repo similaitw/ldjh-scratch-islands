@@ -32,7 +32,7 @@
 html,body{background:var(--bg);color:var(--fg)}
 body{font-family:var(--body);font-size:15px;line-height:1.7;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 40px}
-.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.wrap{max-width:1680px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
 header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 16px}
 h1{font-family:var(--display);font-weight:700;font-size:clamp(1.5rem,4.5vw,2.2rem);margin:0;line-height:1.15;text-wrap:balance}
 .sub{margin:2px 0 0;color:var(--muted);font-size:.92rem;max-width:62ch}
@@ -42,9 +42,20 @@ h1{font-family:var(--display);font-weight:700;font-size:clamp(1.5rem,4.5vw,2.2re
 .swatches i{width:18px;height:8px;border-radius:4px;display:block}
 
 .main{display:grid;grid-template-columns:1fr;gap:14px}
-@media (min-width:960px){.main{grid-template-columns:minmax(0,1.7fr) minmax(360px,1fr);align-items:start}}
-.stage{position:relative;height:min(60vh,580px);min-height:360px;border-radius:18px;overflow:hidden;background:var(--sea);touch-action:none;border:1px solid var(--line)}
+@media (min-width:960px){.main{grid-template-columns:minmax(0,1.75fr) minmax(340px,1fr);align-items:start}}
+.stage{position:relative;height:min(62svh,600px);min-height:340px;border-radius:18px;overflow:hidden;background:var(--sea);touch-action:none;border:1px solid var(--line)}
 @media (min-width:960px){.stage{height:calc(100vh - 32px);max-height:900px;position:sticky;top:16px}}
+/* 桌機：整個畫面剛好塞進視窗，地圖填滿高度，教學面板在自己的欄位裡捲動 */
+@media (min-width:960px) and (min-height:560px){
+  html,body{height:100%;overflow:hidden}
+  body{padding-block:12px;box-sizing:border-box}
+  .wrap{height:calc(100dvh - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+  header{flex:none}
+  header .sub{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;max-width:80ch}
+  .main{flex:1;min-height:0;align-items:stretch}
+  .stage{height:auto;max-height:none;min-height:0;position:relative;top:auto}
+  .panel{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+}
 .stage canvas{display:block;width:100%;height:100%;cursor:grab}
 .stage canvas:active{cursor:grabbing}
 .labels{position:absolute;inset:0;pointer-events:none}
@@ -1253,10 +1264,9 @@ function initThree(){
     mid.add(perp); mid.y=ride==='ship'?-.45:y*2-.6;
     return new THREE.QuadraticBezierCurve3(p0,mid,p2);
   }
-  const dotG=new THREE.SphereGeometry(.1,8,8), parked=[];
+  const dotG=new THREE.SphereGeometry(.12,8,8), parked=[]; let trail=null;
   for(let i=0;i<groups.length-1;i++){
     const ride=ISLANDS[i].ride, c=legCurve(i,i+1,ride), len=c.getLength(), n=Math.round(len*1.6);
-    for(let k=1;k<n;k++){ const d=new THREE.Mesh(dotG,mats.route); d.position.copy(c.getPoint(k/n)); if(ride==='ship') d.position.y=-.5; scene.add(d); }
     const v=vehicles[ride](); v.scale.setScalar(1.4); const u=.5; v.position.copy(c.getPoint(u)); v.lookAt(c.getPoint(u+.02)); v.userData={curve:c,u,ride};
     scene.add(v); parked.push(v);
   }
@@ -1371,12 +1381,14 @@ function initThree(){
     const t=clock.getElapsedTime(), k=reduce?1:.06, dt=Math.min(.1,t-lastT); lastT=t; dayNight(dt); animHero(t);
     if(trip){
       const u=Math.min(1,(t-trip.t0)/trip.dur), e=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
+      if(trail) trail.g.children.forEach(d=>{ d.visible=d.userData.u<=e; });
       const p=trip.curve.getPoint(e); traveler.position.copy(p); if(trip.ride==='ship') traveler.position.y=-.55+Math.sin(t*4)*.05;
       traveler.lookAt(trip.curve.getPoint(Math.min(1,e+.01)).setY(trip.ride==='ship'?traveler.position.y:trip.curve.getPoint(Math.min(1,e+.01)).y));
       if(trip.ride==='plane') traveler.rotateZ(Math.sin(e*Math.PI)*.25);
       goal.copy(p); goal.y=Math.max(0,p.y*.6);
-      if(u>=1){ const to=trip.to; trip=null; traveling=false; placeHero(to); traveler.visible=false; traveling=false; travelEl.hidden=true; arrive(to); }
+      if(u>=1){ const to=trip.to; trip=null; if(trail) trail.fade=t; traveling=false; placeHero(to); traveler.visible=false; traveling=false; travelEl.hidden=true; arrive(to); }
     }
+    if(trail&&trail.fade!==null){ const f=1-(t-trail.fade)/1.6; if(f<=0){ scene.remove(trail.g); trail=null; } else trail.m.opacity=.85*f; }
     target.lerp(goal,trip?.12:k); dist+=(distGoal-dist)*k; if(!dragging) el+=(elGoal-el)*k;
     scene.fog.near=dist*1.6; scene.fog.far=dist*4;
     placeCam();
@@ -1406,6 +1418,10 @@ function initThree(){
       traveler.clear(); const vh=vehicles[ride](); vh.scale.setScalar(1.6); traveler.add(vh); traveler.visible=true;
       if(hero){ traveler.add(heroRoot); heroRoot.position.set(0,ride==='plane'?.28:.45,ride==='ship'?-.15:0); heroRoot.rotation.set(0,0,0); heroRoot.scale.setScalar(1.3); }
       const dur=reduce?.01:Math.min(5,Math.max(2.4,curve.getLength()/9));
+      if(trail) scene.remove(trail.g);
+      const tm=mats.route.clone(); tm.opacity=.85; const tg=new THREE.Group(), tn=Math.max(8,Math.round(curve.getLength()*1.6));
+      for(let k=1;k<tn;k++){ const d=new THREE.Mesh(dotG,tm); d.position.copy(curve.getPoint(k/tn)); if(ride==='ship') d.position.y=-.5; d.visible=false; d.userData.u=k/tn; tg.add(d); }
+      scene.add(tg); trail={g:tg,m:tm,fade:null};
       trip={curve,ride,to,t0:clock.getElapsedTime(),dur,leg:adj?a:-1};
       distGoal=ride==='plane'?34:24; elGoal=ride==='ship'?.55:.75;
       return ride;
@@ -1432,6 +1448,7 @@ function select(i,zoom){
   ISLANDS.forEach((it,k)=>it.lbl&&it.lbl.classList.toggle('on',k===i));
   if(three){ three.focus(i,zoomed); three.placeHero(i); }
   ovBtn.hidden=!zoomed;
+  if(panel.scrollTop) panel.scrollTop=0;
   renderPanel(i); refreshGlobal();
 }
 ovBtn.addEventListener('click',()=>{ if(traveling) return; zoomed=false; ovBtn.hidden=true; if(three) three.focus(current,false); });
