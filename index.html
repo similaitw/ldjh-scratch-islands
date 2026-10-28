@@ -1279,30 +1279,118 @@ function initThree(){
   };
 
   // 每座島 = 一群六角地塊，大小依世界地圖的陸地比例
-  const SC=1.6, T=1.0, W=Math.sqrt(3)*T, NB=[[1,0],[-1,0],[0,1],[0,-1],[1,-1],[-1,1]];
+  // ---------- 巨型 3D Scratch 積木（鋪在島上當廣場） ----------
+  const BH=.62, NX=.28, NW=.36, ND=.09, PX=150;
+  function stackShape(w,h,{hat=false,c=null}={}){
+    const s=new THREE.Shape(); s.moveTo(0,0);
+    if(hat){ s.bezierCurveTo(.15,.42,.85,.42,1.0,0); }
+    else { s.lineTo(NX,0); s.lineTo(NX+.07,-ND); s.lineTo(NX+NW-.07,-ND); s.lineTo(NX+NW,0); }
+    s.lineTo(w,0); s.lineTo(w,-h);
+    if(c){ // C 形：上臂高 h，開口 c.mouth，下臂高 c.foot，左臂寬 c.arm
+      const a=c.arm, m=c.mouth, f=c.foot, wb=Math.max(a+NX+NW+.5,w*.42);
+      s.lineTo(a+NX+NW,-h); s.lineTo(a+NX+NW-.07,-h-ND); s.lineTo(a+NX+.07,-h-ND); s.lineTo(a+NX,-h); s.lineTo(a,-h);
+      s.lineTo(a,-h-m); s.lineTo(a+NX,-h-m); s.lineTo(a+NX+.07,-h-m-ND); s.lineTo(a+NX+NW-.07,-h-m-ND); s.lineTo(a+NX+NW,-h-m);
+      s.lineTo(wb,-h-m); s.lineTo(wb,-h-m-f); h=h+m+f; }
+    s.lineTo(NX+NW,-h); s.lineTo(NX+NW-.07,-h-ND); s.lineTo(NX+.07,-h-ND); s.lineTo(NX,-h); s.lineTo(0,-h); s.lineTo(0,0);
+    return s;
+  }
+  function pillShape(w,h){ const s=new THREE.Shape(), r=h/2; s.moveTo(r,0); s.lineTo(w-r,0); s.absarc(w-r,-r,r,Math.PI/2,-Math.PI/2,true); s.lineTo(r,-h); s.absarc(r,-r,r,-Math.PI/2,Math.PI/2,true); return s; }
+  function boolShape(w,h){ const s=new THREE.Shape(); s.moveTo(h/2,0); s.lineTo(w-h/2,0); s.lineTo(w,-h/2); s.lineTo(w-h/2,-h); s.lineTo(h/2,-h); s.lineTo(0,-h/2); s.lineTo(h/2,0); return s; }
+  const blockTex=[];
+  // 在積木表面畫字：一般文字白色，[ ] 內畫成白色圓角格子
+  function paintLabel(ctx,text,cx,cy,col){
+    ctx.font=`700 ${Math.round(PX*.27)}px "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif`; ctx.textBaseline='middle';
+    const parts=text.split(/(\[[^\]]*\])/).filter(Boolean), pad=PX*.09, gap=PX*.06;
+    const ws=parts.map(p=>p.startsWith('[')?ctx.measureText(p.slice(1,-1)).width+pad*2:ctx.measureText(p).width);
+    let x=cx-(ws.reduce((a,b)=>a+b,0)+gap*(parts.length-1))/2;
+    parts.forEach((p,k)=>{
+      if(p.startsWith('[')){ const t=p.slice(1,-1), w=ws[k], hh=PX*.34; ctx.fillStyle='#ffffff'; ctx.beginPath();
+        if(ctx.roundRect) ctx.roundRect(x,cy-hh/2,w,hh,hh/2); else ctx.rect(x,cy-hh/2,w,hh); ctx.fill();
+        ctx.fillStyle='#3b3b3b'; ctx.fillText(t,x+pad,cy+1); }
+      else { ctx.lineJoin='round'; ctx.lineWidth=PX*.05; ctx.strokeStyle='rgba(0,0,0,.28)'; ctx.strokeText(p,x,cy+1); ctx.fillStyle='#ffffff'; ctx.fillText(p,x,cy+1); }
+      x+=ws[k]+gap; });
+  }
+  function blockMesh(kind,{w,label,col,colD,h=BH,hat=false,c=null,label2=null}){
+    const shape=kind==='pill'?pillShape(w,h):kind==='bool'?boolShape(w,h):stackShape(w,h,{hat,c});
+    const geo=new THREE.ExtrudeGeometry(shape,{depth:.26,bevelEnabled:true,bevelThickness:.05,bevelSize:.04,bevelSegments:2,curveSegments:14});
+    geo.computeBoundingBox(); const bb=geo.boundingBox, bw=bb.max.x-bb.min.x, bh=bb.max.y-bb.min.y;
+    const cv=document.createElement('canvas'); cv.width=Math.ceil(bw*PX); cv.height=Math.ceil(bh*PX);
+    const tex=new THREE.CanvasTexture(cv); tex.anisotropy=4;
+    tex.repeat.set(1/bw,1/bh); tex.offset.set(-bb.min.x/bw,-bb.min.y/bh);
+    const draw=()=>{ const ctx=cv.getContext('2d'); ctx.fillStyle=col; ctx.fillRect(0,0,cv.width,cv.height);
+      paintLabel(ctx,label,(c?(w*.5):w/2)*PX - bb.min.x*PX, (bb.max.y + h/2)*PX, col);
+      if(label2&&c){ paintLabel(ctx,label2,(w*.21)*PX - bb.min.x*PX,(bb.max.y+h+c.mouth+c.foot/2)*PX,col); }
+      tex.needsUpdate=true; };
+    draw(); blockTex.push(draw);
+    const cap=new THREE.MeshStandardMaterial({map:tex,roughness:.55}), side=new THREE.MeshStandardMaterial({color:colD,roughness:.6});
+    const m=new THREE.Mesh(geo,[cap,side]); m.castShadow=true; m.receiveShadow=true;
+    m.rotation.x=-Math.PI/2; return m;
+  }
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>blockTex.forEach(f=>f()));
+  // 每座島的積木腳本：由上（遠）往下（近）排；c 型積木把下一顆放進開口
+  const CC=k=>CAT[k];
+  const SCRIPTS={
+    events:[{k:'stack',hat:true,w:3.1,label:'當 [⚑] 被點擊',cat:'events'},{k:'stack',w:3.1,label:'廣播訊息 [遊戲開始]',cat:'events'}],
+    motion:[{k:'stack',w:2.9,label:'移動 [10] 點',cat:'motion'},{k:'stack',w:2.9,label:'右轉 ↻ [15] 度',cat:'motion'},{k:'stack',w:2.9,label:'碰到邊緣就反彈',cat:'motion'}],
+    looks:[{k:'stack',w:3.2,label:'說出 [你好！]',cat:'looks'},{k:'stack',w:3.2,label:'下一個造型',cat:'looks'},{k:'stack',w:3.2,label:'尺寸設為 [100] %',cat:'looks'}],
+    sound:[{k:'stack',w:3.3,label:'播放音效 [喵] 直到結束',cat:'sound'},{k:'stack',w:3.3,label:'音量設為 [100] %',cat:'sound'}],
+    loop:[{k:'c',w:3.2,label:'重複 [10] 次',cat:'control',inner:{w:2.4,label:'移動 [10] 點',cat:'motion'}}],
+    sensing:[{k:'bool',w:3.0,label:'碰到 [鼠標] ?',cat:'sensing'},{k:'pill',w:2.2,label:'計時器',cat:'sensing',gap:.25},{k:'stack',w:3.4,label:'詢問 [你叫什麼？] 並等待',cat:'sensing',gap:.2}],
+    ops:[{k:'pill',w:2.2,label:'[3] + [4]',cat:'ops'},{k:'bool',w:2.6,label:'[10] > [9]',cat:'ops',gap:.22},{k:'pill',w:3.4,label:'隨機取數 [1] 到 [6]',cat:'ops',gap:.22}],
+    vars:[{k:'stack',w:3.4,label:'變數 [分數] 設為 [0]',cat:'vars'},{k:'stack',w:3.4,label:'變數 [分數] 改變 [1]',cat:'vars'},{k:'stack',w:3.4,label:'添加 [蘋果] 到 [水果]',cat:'list'}],
+    if:[{k:'c',w:3.3,label:'如果 [碰到?] 那麼',cat:'control',inner:{w:2.4,label:'說出 [小心！]',cat:'looks'}}],
+    my:[{k:'stack',hat:true,w:3.3,label:'定義 畫正方形 [邊長]',cat:'my'},{k:'stack',w:3.3,label:'畫正方形 [50]',cat:'my'}],
+  };
+  function buildScript(id){
+    const list=SCRIPTS[id]||[], grp=new THREE.Group(); let z=0, wmax=0;
+    list.forEach(b=>{
+      z+=b.gap||0; const [col,colD]=CC(b.cat);
+      if(b.k==='c'){
+        const arm=.32, mouth=BH, foot=.45;
+        const m=blockMesh('stack',{w:b.w,label:b.label,label2:b.label2,col,colD,c:{arm,mouth,foot}}); m.position.set(0,0,z); grp.add(m);
+        const [ic,icD]=CC(b.inner.cat); const im=blockMesh('stack',{w:b.inner.w,label:b.inner.label,col:ic,colD:icD}); im.position.set(arm,0,z+BH); grp.add(im);
+        z+=BH+mouth+foot; }
+      else { const h=b.k==='stack'?BH:.56; const m=blockMesh(b.k,{w:b.w,label:b.label,col,colD,hat:b.hat,h}); m.position.set(0,0,z); grp.add(m); z+=h; }
+      wmax=Math.max(wmax,b.w);
+    });
+    grp.children.forEach(m=>{ m.position.x-=wmax/2; });
+    return {grp,w:wmax,d:z};
+  }
+
+  const SC=1.5, T=1.0, W=Math.sqrt(3)*T, NB=[[1,0],[-1,0],[0,1],[0,-1],[1,-1],[-1,1]];
   const pick=[], groups=[];
   ISLANDS.forEach((it,i)=>{
     const g=new THREE.Group(); g.position.set(it.x,0,it.z);
-    const rnd=rng(i*97+13), tiles=[[0,0]], has=new Set(['0,0']);
-    while(tiles.length<it.size){ const [q,r]=tiles[Math.floor(rnd()*tiles.length)], [dq,dr]=NB[Math.floor(rnd()*6)], k=(q+dq)+','+(r+dr);
+    const rnd=rng(i*97+13), tiles=[], has=new Set();
+    // 基礎：半徑 2 的六角圓盤（19 塊），再往外長出不規則海岸
+    for(let r=-2;r<=2;r++) for(let q=-2;q<=2;q++){ if(Math.abs(q+r)<=2){ tiles.push([q,r]); has.add(q+','+r); } }
+    tiles.sort((a,b)=>(Math.abs(a[0])+Math.abs(a[1])+Math.abs(a[0]+a[1]))-(Math.abs(b[0])+Math.abs(b[1])+Math.abs(b[0]+b[1])));
+    let guard=0; while(tiles.length<19+it.size*1.6&&guard++<2000){ const [q,r]=tiles[Math.floor(rnd()*tiles.length)], [dq,dr]=NB[Math.floor(rnd()*6)], k=(q+dq)+','+(r+dr);
       if(!has.has(k)){ has.add(k); tiles.push([q+dq,r+dr]); } }
     let ext=0; const dec=DECOR[it.id]||[], spots=[];
+    // 積木廣場：放在島的正前方（+z，面向鏡頭）
+    const sc=buildScript(it.id), BSC=1.75, PZ=1.05, foot={x0:-sc.w*BSC/2-.45,x1:sc.w*BSC/2+.45,z0:PZ-.55,z1:PZ+sc.d*BSC+.45};
+    const onPlaza=(x,z)=>x>foot.x0&&x<foot.x1&&z>foot.z0&&z<foot.z1;
+    const back=tiles.map(([q,r])=>[W*(q+r/2),1.5*T*r]).filter(([x,z])=>z<-.5&&Math.hypot(x,z)>1.2&&Math.hypot(x,z)<3.8).sort((a,b)=>Math.atan2(a[0],-a[1])-Math.atan2(b[0],-b[1]));
+    const decSpots=new Set(); for(let k=0;k<dec.length&&back.length;k++){ const pck=back[Math.floor((k+.5)*back.length/dec.length)]; if(pck) decSpots.add(pck.join(',')); }
     tiles.forEach(([q,r],n)=>{
       const x=W*(q+r/2), z=1.5*T*r; ext=Math.max(ext,Math.hypot(x,z));
       const inner=NB.every(([dq,dr])=>has.has((q+dq)+','+(r+dr)));
-      const top=n===0?.25:(inner?.35+rnd()*.35:.15+rnd()*.15);
+      const ring=(Math.abs(q)+Math.abs(r)+Math.abs(q+r))/2, plaza=onPlaza(x,z);
+      const top=plaza?.42:ring<=1?.3:(inner?.35+rnd()*.35:.15+rnd()*.15);
       const t=new THREE.Group(); t.position.set(x,0,z);
       const bm=biomeM[it.id];
       const cliff=cyl(T*.99,T*.92,.9+top,bm.cliff,6); cliff.position.y=-.6+(.9+top)/2-.15; cliff.receiveShadow=true;
       const rim=cyl(T,T,.1,catM[it.cat][0],6); rim.position.y=top-.08; rim.receiveShadow=true;
       const turf=cyl(T*.86,T*.86,.1,inner?bm.inner:bm.edge,6); turf.position.y=top-.03; turf.receiveShadow=true;
       t.add(cliff,rim,turf);
-      if(n>0 && n<=dec.length) spots.push([x,z,top]);
-      if(n>dec.length && rnd()<.75){ const nT=1+Math.floor(rnd()*2); for(let k=0;k<nT;k++){ const tr=tree(.7+rnd()*.4,bm); tr.position.set((rnd()-.5)*.9,top,(rnd()-.5)*.9); t.add(tr);} }
+      if(decSpots.has(x+','+z)) spots.push([x,z,top]);
+      else if(!plaza && ring>1 && rnd()<.7){ const nT=1+Math.floor(rnd()*2); for(let k=0;k<nT;k++){ const tr=tree(.7+rnd()*.4,bm); tr.position.set((rnd()-.5)*.9,top,(rnd()-.5)*.9); t.add(tr);} }
       g.add(t);
     });
-    const lm=marks[it.mark](catM[it.cat]); lm.position.y=.27; g.add(lm);
-    dec.forEach((fn,k)=>{ if(!spots[k]) return; const o=fn(catM[it.cat]); const [x,z,top]=spots[k]; o.position.set(x,top,z); o.rotation.y=Math.atan2(-x,-z)+Math.PI; g.add(o); if(o.userData.anim) anims.push(o.userData.anim); });
+    const lm=marks[it.mark](catM[it.cat]); lm.position.y=.3; lm.scale.setScalar(1.35); g.add(lm);
+    sc.grp.position.set(0,.42,PZ); sc.grp.scale.setScalar(BSC); g.add(sc.grp);
+    dec.forEach((fn,k)=>{ if(!spots[k]) return; const o=fn(catM[it.cat]); const [x,z,top]=spots[k]; o.position.set(x,top,z); o.rotation.y=Math.atan2(x,z); g.add(o); if(o.userData.anim) anims.push(o.userData.anim); });
     g.traverse(o=>{ if(o.isMesh){ o.userData.idx=i; pick.push(o);} });
     g.scale.setScalar(SC);
     g.userData={lm,phase:i*.9,ext:(ext+T)*SC}; scene.add(g); groups.push(g);
@@ -1421,7 +1509,7 @@ function initThree(){
     heroBody=g; heroRoot.add(g);
   }
   buildHero();
-  function placeHero(i){ if(traveling) return; const g=groups[i]; g.add(heroRoot); heroRoot.position.set(.15,.27,.82); heroRoot.scale.setScalar(1.45); heroRoot.rotation.set(0,0,0); }
+  function placeHero(i){ if(traveling) return; const g=groups[i]; g.add(heroRoot); heroRoot.position.set(1.3,.3,.35); heroRoot.scale.setScalar(1.45); heroRoot.rotation.set(0,0,0); }
   placeHero(current);
   function animHero(t){
     if(!heroBody) return; const cz=t-cheerT<1.2, hz=t-hurtT<.6;
@@ -1484,7 +1572,7 @@ function initThree(){
   const addJob=(t0,dur,fn,done)=>{ jobs.push({t0,dur,fn,done,fin:false}); return dur; };
   const ease=u=>u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
   const angDiff=(a,b)=>((b-a+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
-  const spotW=i=>V3(.15,.27,.82).multiplyScalar(SC).add(groups[i].position);
+  const spotW=i=>V3(1.3,.3,.35).multiplyScalar(SC).add(groups[i].position);
   // 直升機飛行：先爬升、平飛、再下降到 B 的高度（B 在高空就停在高空）
   function flyJob(t0,A,B,done,onStart){
     const L=Math.hypot(B.x-A.x,B.z-A.z), dur=reduce?.01:Math.max(1.6,Math.min(5,L/9+1.2));
