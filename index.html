@@ -289,6 +289,16 @@ button .tc i{box-shadow:0 0 0 1px rgba(0,0,0,.25)}
 @keyframes flash{0%{box-shadow:0 0 0 0 var(--warn)}30%{box-shadow:0 0 0 6px var(--warn-line)}100%{box-shadow:0 0 0 0 transparent}}
 .flash{animation:flash 1.4s ease-out;border-radius:12px}
 @media (prefers-reduced-motion:reduce){.flash{animation:none;outline:3px solid var(--warn)}}
+
+/* ---------- 動手做 ---------- */
+.labbox{border:2px solid var(--c);border-radius:14px;padding:12px 14px;background:color-mix(in srgb,var(--c) 7%,var(--surface))}
+.labbtns{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 6px}
+.lbtn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;background:var(--c);color:#fff;border:1px solid var(--cd);font-weight:700;text-decoration:none}
+.lbtn.ghost{background:var(--surface);color:var(--fg);border-color:var(--line)}
+.lbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.labnote{font-size:.85rem;color:var(--muted);margin:0 0 6px}
+.chal{background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:8px 12px}
+.chal b{font-size:.9rem}
 </style>
 </head>
 <body>
@@ -798,9 +808,15 @@ const RIDE={heli:'直升機'};
 const KEY='scratch-world-progress';
 let done={}; try{ done=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){ done={}; }
 const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(done)); }catch(e){} };
-const SEC_NAME={concept:'觀念',blocks:'積木',example:'範例程式',code:'程式對照',quest:'島長任務'};
+const SEC_NAME={concept:'觀念',blocks:'積木',example:'範例程式',lab:'動手做',code:'程式對照',quest:'島長任務'};
+// 動手做：每區一個 Scratch 範例專案（.sb3），用 TurboWarp 線上編輯器直接開啟
+const SB3_BASE='https://ldjh-scratch-islands.vercel.app/sb3/';
+const LABS={"events-start": {"file": "events-start.sb3", "title": "綠旗與廣播", "steps": ["按綠旗：小島民先說話，再廣播「遊戲開始」", "小鳥收到廣播，也跟著說話", "按空白鍵試試另一段程式"], "challenges": ["加一段「當角色被點擊」，讓小島民說「好癢！」", "把「說出…持續 1 秒」改成 3 秒，小鳥會晚一點才說話嗎？為什麼？"]}, "motion-move": {"file": "motion-move.sb3", "title": "來回走的角色", "steps": ["按綠旗：角色從左邊出發，碰到邊緣就反彈", "注意右下角的 x、y 數字一直在變"], "challenges": ["把移動 5 點改成 15，速度變快還是變慢？", "拿掉「迴轉方式設為 左-右」，反彈時角色會怎樣？"]}, "looks-look": {"file": "looks-look.sb3", "title": "兩格動畫", "steps": ["按綠旗：兩個造型輪流切換，看起來像在走路", "點角色一下，會改變顏色"], "challenges": ["把等待改成 0.05 秒和 1 秒，動畫有什麼不同？", "到「造型」分頁加畫第 3 個造型，動畫變怎樣？"]}, "sound-play": {"file": "sound-play.sb3", "title": "背景音樂與音效", "steps": ["按綠旗：音樂播完一首再重播", "點角色：叮一聲，可以一直點"], "challenges": ["把迴圈裡改成不會等的「播放音效」，聽起來怎樣？", "加「音量改變 -10」，做出漸漸變小聲"]}, "loop-loop": {"file": "loop-loop.sb3", "title": "用迴圈畫正方形", "steps": ["按綠旗：重複 4 次「移動 100、右轉 90 度」", "畫筆跟著角色畫出正方形"], "challenges": ["改成三角形：重複 3 次、右轉 120 度", "畫六邊形，轉角要幾度？（360 ÷ 邊數）"]}, "sensing-sense": {"file": "sensing-sense.sb3", "title": "詢問與回答", "steps": ["按綠旗：輸入名字按 Enter，角色會跟你打招呼", "按空白鍵：說出計時器的秒數"], "challenges": ["再問一題「你最喜歡什麼？」並說出答案", "綠旗後先「計時器重置」，再按空白鍵看看秒數"]}, "ops-arith": {"file": "ops-arith.sb3", "title": "四則運算", "steps": ["按綠旗：角色說出 (3+4)×2 的答案", "接著說出 7÷2，注意有小數"], "challenges": ["把積木包法反過來，算 3+(4×2)", "算算看 100 − 37 × 2"]}, "ops-random": {"file": "ops-random.sb3", "title": "隨機骰子", "steps": ["按綠旗，再點角色：每次說出不同的 1～6", "多點幾次，看看會不會重複"], "challenges": ["改成 1 到 100", "加「定位到 x:隨機 y:隨機」讓角色跳到隨機位置"]}, "ops-compare": {"file": "ops-compare.sb3", "title": "比較", "steps": ["按綠旗：輸入分數", "角色說出 true（成立）或 false（不成立）"], "challenges": ["分別輸入 59、60，結果一樣嗎？", "改成「< 60」，結果會怎麼變？"]}, "ops-logic": {"file": "ops-logic.sb3", "title": "且、或", "steps": ["按綠旗：輸入一個數字", "兩個條件都成立才說 true"], "challenges": ["輸入 -5、50、200 各一次", "把「且」換成「或」，再輸入 200"]}, "ops-string": {"file": "ops-string.sb3", "title": "字串", "steps": ["按綠旗：輸入名字", "角色把文字接起來打招呼，再說出字數"], "challenges": ["用「第 1 字」說出你的姓", "用字串組合說出「〇〇同學你好」"]}, "ops-mod": {"file": "ops-mod.sb3", "title": "餘數", "steps": ["按綠旗：輸入整數", "說出除以 2 的餘數：0 是偶數，1 是奇數"], "challenges": ["改成除以 3，輸入 9、10、11", "加「四捨五入」積木，試試輸入 2.5"]}, "ops-func": {"file": "ops-func.sb3", "title": "數學函式", "steps": ["按綠旗：輸入數字（例如 81）", "角色說出平方根"], "challenges": ["把選單換成「絕對值」，輸入 -8", "換成「無條件捨去」，輸入 3.9"]}, "vars-var": {"file": "vars-var.sb3", "title": "點點樂計分", "steps": ["按綠旗：分數歸零並顯示在舞台左上角", "一直點角色：分數 +1，角色跳到別的地方"], "challenges": ["把「改變 1」換成「設為 1」，分數會怎樣？", "每點一次加 10 分"]}, "vars-patterns": {"file": "vars-patterns.sb3", "title": "交換兩個變數", "steps": ["按綠旗：先說出 a=3 b=7", "透過「暫存」交換，再說出 a=7 b=3"], "challenges": ["拿掉暫存，直接互相設定，結果對嗎？", "加一個「總和」變數，算出 a + b"]}, "vars-list": {"file": "vars-list.sb3", "title": "水果列表", "steps": ["按綠旗：列表清空後放入蘋果、香蕉、芭樂", "迴圈用 i 一項一項說出來"], "challenges": ["再加 2 種水果，迴圈次數要改嗎？", "改成隨機說出一種水果"]}, "if-if": {"file": "if-if.sb3", "title": "成績等第", "steps": ["按綠旗：輸入分數", "先判斷 > 89，不成立再判斷 > 59"], "challenges": ["輸入 95、70、40，各說什麼？", "加一個等第：大於 79 說「很好」"]}, "if-gameloop": {"file": "if-gameloop.sb3", "title": "躲避遊戲", "steps": ["按綠旗：用左右鍵移動小島民", "敵人從上面掉下來，碰到會扣 1 條命，生命用完就結束"], "challenges": ["加上「上、下鍵」移動", "拿掉「等待 1 秒」，碰一下會扣幾條命？為什麼？"]}, "my-define": {"file": "my-define.sb3", "title": "畫多邊形", "steps": ["按綠旗：同一顆「畫多邊形」積木畫出三角形和六邊形", "下面是定義，上面是呼叫，參數不同畫出的圖就不同"], "challenges": ["再呼叫一次「畫多邊形 4 80」", "呼叫「畫多邊形 36 10」，畫出來像什麼？"]}};
+const labOf=(it,tp)=>LABS[it.id+'-'+tp.id];
+const twURL=f=>'https://turbowarp.org/editor?project_url='+encodeURIComponent(SB3_BASE+f);
+ISLANDS.forEach(it=>it.topics.forEach(tp=>{ tp.lab=labOf(it,tp)||null; }));
 const SHOW_CODE=false; // 七年級先不教文字程式語言
-const secsOf=tp=>['concept','blocks',...(tp.example?['example']:[]),...(SHOW_CODE&&tp.code?['code']:[]),'quest'].filter(s=>s!=='concept'||tp.concept);
+const secsOf=tp=>['concept','blocks',...(tp.example?['example']:[]),...(tp.lab?['lab']:[]),...(SHOW_CODE&&tp.code?['code']:[]),'quest'].filter(s=>s!=='concept'||tp.concept);
 const ck=(it,tp,s)=>`${it.id}:${tp.id}:${s}`;
 function topicPct(it,tp){ const ss=secsOf(tp); return ss.filter(s=>done[ck(it,tp,s)]).length/ss.length; }
 function islandPct(it){ let a=0,b=0; it.topics.forEach(tp=>{ const ss=secsOf(tp); b+=ss.length; a+=ss.filter(s=>done[ck(it,tp,s)]).length; }); return b?a/b:0; }
@@ -970,7 +986,9 @@ const panel=document.getElementById('panel');
 let current=0, lang='py', zoomed=false, traveling=false; const topicSel={};
 try{ lang=localStorage.getItem('scratch-islands-lang')||'py'; }catch(e){}
 const norm=s=>String(s).trim().toLowerCase().replace(/\s+/g,'').replace(/[。．.！!]$/,'');
-const gotBtn=(s,on)=>`<div class="got"><button type="button" data-sec="${s}" aria-pressed="${on}">${on?'✓ 已看懂':'我看懂了'}</button></div>`;
+const GOT_TXT={lab:['我動手做過了','✓ 做過了']};
+const gotTxt=(s,on)=>(GOT_TXT[s]||['我看懂了','✓ 已看懂'])[on?1:0];
+const gotBtn=(s,on)=>`<div class="got"><button type="button" data-sec="${s}" aria-pressed="${on}">${gotTxt(s,on)}</button></div>`;
 
 function renderPanel(idx){
   const it=ISLANDS[idx], ti=topicSel[it.id]||0, tp=it.topics[ti], qz=tp.quest, isDone=s=>!!done[ck(it,tp,s)];
@@ -990,6 +1008,14 @@ function renderPanel(idx){
     <div data-sec="blocks">${h3('blocks',it.topics.length>1?tp.name+'的積木':'島上的積木')}
       <div class="blocks">${tp.blocks.map(([b,d])=>`<div class="brow">${b}<small>${d}</small></div>`).join('')}</div>${gotBtn('blocks',isDone('blocks'))}</div>
     ${tp.example?`<div data-sec="example">${h3('example')}<div class="script">${tp.example.script.join('')}</div><ol class="steps">${tp.example.steps.map(s=>`<li>${s}</li>`).join('')}</ol>${gotBtn('example',isDone('example'))}</div>`:''}
+    ${tp.lab?`<div data-sec="lab" class="labbox">${h3('lab','動手做：'+tp.lab.title)}
+      <ol class="steps">${tp.lab.steps.map(x=>`<li>${x}</li>`).join('')}</ol>
+      <div class="labbtns"><a class="lbtn" href="${twURL(tp.lab.file)}" target="_blank" rel="noopener">在 Scratch 編輯器打開 ↗</a>
+        <a class="lbtn ghost" href="${SB3_BASE+tp.lab.file}" download>下載範例檔 .sb3</a>
+        <a class="lbtn ghost" href="https://scratch.mit.edu/projects/editor/" target="_blank" rel="noopener">開官方 Scratch ↗</a></div>
+      <p class="labnote">打開後先按綠旗 ⚑ 看結果，再照下面的挑戰改程式。用官方 Scratch 的話：先下載範例檔，在 Scratch 選「檔案 → 從你的電腦挑選」。</p>
+      <div class="chal"><b>挑戰</b><ul class="pts">${tp.lab.challenges.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+      ${gotBtn('lab',isDone('lab'))}</div>`:''}
     ${SHOW_CODE&&tp.code?`<div data-sec="code">${h3('code','換成文字程式語言')}<div class="codebox"><div class="langs" role="tablist"><button type="button" role="tab" data-l="py" aria-selected="${lang==='py'}">Python</button><button type="button" role="tab" data-l="js" aria-selected="${lang==='js'}">JavaScript</button></div><pre><code>${hl(tp.code[lang])}</code></pre></div>${gotBtn('code',isDone('code'))}</div>`:''}
     ${tp.oops?`<div><h3>常見錯誤</h3><ul class="oops">${tp.oops.map(o=>`<li>${o}</li>`).join('')}</ul></div>`:''}
     <div class="tip"><b>小技巧</b>　${tp.tip}</div>
@@ -1008,7 +1034,7 @@ function renderPanel(idx){
   const mark=(s,on=true)=>{ const before=islandPct(it), px=xpNow(), pc=coinsNow(); if(on) done[ck(it,tp,s)]=true; else delete done[ck(it,tp,s)]; save(); refreshPanelProgress(idx); refreshGlobal(); afterChange(px,pc);
     if(before<1 && islandPct(it)>=1){ panel.querySelector('#finish').scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'}); islandComplete(it); } };
   panel.querySelectorAll('.got button').forEach(b=>b.addEventListener('click',()=>{ const on=b.getAttribute('aria-pressed')!=='true';
-    b.setAttribute('aria-pressed',on); b.textContent=on?'✓ 已看懂':'我看懂了'; mark(b.dataset.sec,on); }));
+    b.setAttribute('aria-pressed',on); b.textContent=gotTxt(b.dataset.sec,on); mark(b.dataset.sec,on); }));
   const win=()=>{ fb.className='fb ok'; fb.textContent='答對了！任務完成'; mark('quest'); const h=panel.querySelector('#hintBtn'); if(h) h.textContent='提示'; };
   panel.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{ topicSel[it.id]=+b.dataset.k; renderPanel(idx); }));
   panel.querySelectorAll('.langs button').forEach(b=>b.addEventListener('click',()=>{ lang=b.dataset.l; try{localStorage.setItem('scratch-islands-lang',lang);}catch(e){}
