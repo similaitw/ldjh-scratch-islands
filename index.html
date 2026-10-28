@@ -1067,7 +1067,27 @@ function initThree(){
   const box=(w,h,d,m)=>mesh(new THREE.BoxGeometry(w,h,d),m);
   const cyl=(rt,rb,h,m,seg=16,ts,tl)=>mesh(new THREE.CylinderGeometry(rt,rb,h,seg,1,false,ts,tl),m);
   const sph=(r,m)=>mesh(new THREE.SphereGeometry(r,14,14),m);
-  function tree(s){ const g=new THREE.Group(); const t=cyl(.06*s,.08*s,.3*s,mats.trunk,6); t.position.y=.15*s; const c=mesh(new THREE.ConeGeometry(.28*s,.7*s,7),mats.tree); c.position.y=.6*s; g.add(t,c); return g; }
+  function tree(s,bm){ const g=new THREE.Group(), m=bm?bm.tree:mats.tree, tk=bm?bm.trunk:mats.trunk, shape=bm?bm.shape:'cone';
+    const t=cyl(.06*s,.08*s,.3*s,tk,6); t.position.y=.15*s; g.add(t);
+    if(shape==='round'){ const c=mesh(new THREE.IcosahedronGeometry(.3*s,1),m); c.position.y=.5*s; g.add(c); }
+    else if(shape==='palm'){ t.scale.y=1.8; t.position.y=.27*s; for(let k=0;k<5;k++){ const l=box(.08*s,.02*s,.4*s,m); l.position.set(0,.56*s,0); l.rotation.set(-.35,k/5*Math.PI*2,0); l.translateZ(.17*s); g.add(l); } }
+    else if(shape==='snow'){ const c=mesh(new THREE.ConeGeometry(.28*s,.7*s,7),m); c.position.y=.6*s; const cap=mesh(new THREE.ConeGeometry(.15*s,.3*s,7),mats.white); cap.position.y=.82*s; g.add(c,cap); }
+    else { const c=mesh(new THREE.ConeGeometry(.28*s,.7*s,7),m); c.position.y=.6*s; g.add(c); }
+    return g; }
+  // 每座島一套色系：外圈＝積木顏色，再配上主題地面、懸崖、植物
+  const BIOME={
+    events: {edge:'#f7e3a1',inner:'#f0cf63',cliff:'#c48e3f',tree:'#4c9a3a',trunk:'#8a5a3b',shape:'palm'},   // 綠旗港：金色沙灘
+    motion: {edge:'#dde9fb',inner:'#a8c6f2',cliff:'#56789f',tree:'#2f6fb0',trunk:'#4a5a70',shape:'cone'},   // 座標群嶼：藍灰石磚
+    looks:  {edge:'#efe4ff',inner:'#cdb0f4',cliff:'#7a5aae',tree:'#f2a2d6',trunk:'#6e4a7e',shape:'round'},  // 魔鏡礁：薰衣草＋櫻花
+    sound:  {edge:'#ffe0f1',inner:'#efa6d9',cliff:'#9a4693',tree:'#7fd1b9',trunk:'#7a3f70',shape:'palm'},   // 音浪灣：粉色海灘
+    loop:   {edge:'#ffe6c4',inner:'#ffc47a',cliff:'#b9741f',tree:'#ff8a3d',trunk:'#7a4a22',shape:'round'},  // 摩天輪半島：遊樂園橘
+    sensing:{edge:'#dcf4fb',inner:'#9fd8ea',cliff:'#3b829e',tree:'#2a6f8a',trunk:'#3b5560',shape:'cone'},   // 雷達大陸：冷調青藍
+    ops:    {edge:'#dff3cf',inner:'#94d06f',cliff:'#4a7f37',tree:'#2e7a2e',trunk:'#5b4026',shape:'cone'},   // 算盤高原：翠綠高原
+    vars:   {edge:'#ffe2c7',inner:'#f3a663',cliff:'#9c5520',tree:'#d9531e',trunk:'#6b3a1a',shape:'round'},  // 寶盒大陸：秋天楓紅
+    if:     {edge:'#f4e6bd',inner:'#ddbd77',cliff:'#93703a',tree:'#7f9b34',trunk:'#6e5428',shape:'cone'},   // 岔路大陸：沙岩荒野
+    my:     {edge:'#eef5fa',inner:'#ffffff',cliff:'#93aec4',tree:'#4f7f8f',trunk:'#5a5a62',shape:'snow'},   // 齒輪冰原：雪地
+  };
+  const biomeM={}; Object.entries(BIOME).forEach(([k,b])=>{ biomeM[k]={edge:M(b.edge),inner:M(b.inner),cliff:M(b.cliff),tree:M(b.tree),trunk:M(b.trunk),shape:b.shape}; });
 
   const marks={
     flag(m){ const g=new THREE.Group(); const p=cyl(.05,.05,1.9,mats.white,8); p.position.y=.95; const f=box(.8,.5,.05,mats.flag); f.position.set(.42,1.6,0);
@@ -1221,12 +1241,13 @@ function initThree(){
       const inner=NB.every(([dq,dr])=>has.has((q+dq)+','+(r+dr)));
       const top=n===0?.25:(inner?.35+rnd()*.35:.15+rnd()*.15);
       const t=new THREE.Group(); t.position.set(x,0,z);
-      const cliff=cyl(T*.99,T*.92,.9+top,mats.cliff,6); cliff.position.y=-.6+(.9+top)/2-.15; cliff.receiveShadow=true;
+      const bm=biomeM[it.id];
+      const cliff=cyl(T*.99,T*.92,.9+top,bm.cliff,6); cliff.position.y=-.6+(.9+top)/2-.15; cliff.receiveShadow=true;
       const rim=cyl(T,T,.1,catM[it.cat][0],6); rim.position.y=top-.08; rim.receiveShadow=true;
-      const turf=cyl(T*.86,T*.86,.1,inner?mats.grass:mats.sand,6); turf.position.y=top-.03; turf.receiveShadow=true;
+      const turf=cyl(T*.86,T*.86,.1,inner?bm.inner:bm.edge,6); turf.position.y=top-.03; turf.receiveShadow=true;
       t.add(cliff,rim,turf);
       if(n>0 && n<=dec.length) spots.push([x,z,top]);
-      if(n>dec.length && rnd()<.75){ const nT=1+Math.floor(rnd()*2); for(let k=0;k<nT;k++){ const tr=tree(.7+rnd()*.4); tr.position.set((rnd()-.5)*.9,top,(rnd()-.5)*.9); t.add(tr);} }
+      if(n>dec.length && rnd()<.75){ const nT=1+Math.floor(rnd()*2); for(let k=0;k<nT;k++){ const tr=tree(.7+rnd()*.4,bm); tr.position.set((rnd()-.5)*.9,top,(rnd()-.5)*.9); t.add(tr);} }
       g.add(t);
     });
     const lm=marks[it.mark](catM[it.cat]); lm.position.y=.27; g.add(lm);
