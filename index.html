@@ -59,14 +59,18 @@ h1{font-family:var(--display);font-weight:700;font-size:clamp(1.5rem,4.5vw,2.2re
 .stage canvas{display:block;width:100%;height:100%;cursor:grab}
 .stage canvas:active{cursor:grabbing}
 .labels{position:absolute;inset:0;pointer-events:none}
-.lbl{position:absolute;transform:translate(-50%,-100%);pointer-events:auto;cursor:pointer;white-space:nowrap;
-  font-family:var(--body);font-weight:700;font-size:12.5px;line-height:1.5;background:var(--surface);color:var(--fg);
-  border:2px solid var(--c);padding:1px 9px;border-radius:999px;box-shadow:0 2px 0 var(--line)}
-.lbl.on{background:var(--c);color:#fff;border-color:var(--cd);box-shadow:0 2px 0 var(--cd)}
-.lbl .n{opacity:.6;margin-right:4px;font-variant-numeric:tabular-nums}
-.lbl .done{color:var(--accent);margin-left:4px;font-variant-numeric:tabular-nums}
-.lbl.on .done{color:#fff}
-@media (max-width:520px){.lbl{font-size:11px;padding:0 7px}}
+.lbl{position:absolute;left:0;top:0;pointer-events:auto;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:7px;
+  padding:3px 10px 3px 3px;border-radius:999px;border:0;background:var(--surface);color:var(--fg);font-family:var(--body);font-weight:700;font-size:13px;line-height:1.2;
+  box-shadow:0 3px 10px rgba(40,60,60,.18);will-change:transform;transition:opacity .35s;backface-visibility:hidden}
+.lbl:hover{z-index:2}
+.lbl b{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--c);color:#fff;font-family:var(--display);font-size:13px;border:3px solid var(--surface);box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.lbl .done{font-style:normal;font-family:var(--mono);font-size:11px;font-weight:600;background:var(--well);color:var(--fg);border-radius:999px;padding:1px 7px;font-variant-numeric:tabular-nums}
+.lbl .done.dn{background:var(--ok);color:#fff}
+.lbl.on{outline:3px solid var(--c);outline-offset:1px}
+.labels.focused .lbl{opacity:0;pointer-events:none}
+.labels.narrow .lbl{padding:2px;gap:0}
+.labels.narrow .lbl .nm,.labels.narrow .lbl .done{display:none}
+.labels.narrow .lbl b{width:26px;height:26px;font-size:12px;border-width:2px}
 .hint{position:absolute;left:12px;bottom:10px;font-size:12px;color:var(--fg);opacity:.75;pointer-events:none}
 .overview{position:absolute;top:10px;left:10px;font-size:13px;padding:6px 12px;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:999px;box-shadow:0 2px 0 var(--line)}
 
@@ -150,10 +154,6 @@ button.ghost{background:transparent;color:var(--fg);border-color:var(--line)}
 .tabs button .tp{font-size:.75rem;opacity:.8;margin-left:4px;font-variant-numeric:tabular-nums}
 .finish{border:2px solid var(--c);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;background:var(--well)}
 .finish b{font-size:1.05rem}
-.lbl .bar{display:block;height:3px;border-radius:2px;background:var(--line);margin:1px 0 2px;overflow:hidden}
-.lbl .bar i{display:block;height:100%;background:var(--accent)}
-.lbl.on .bar{background:rgba(255,255,255,.35)} .lbl.on .bar i{background:#fff}
-.lbl .rg{font-weight:500;opacity:.7;margin-left:4px;font-size:.9em}
 .travel{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:5px 14px;font-weight:700;font-size:13px;box-shadow:0 2px 0 var(--line);white-space:nowrap}
 [hidden]{display:none!important}
 .modal{position:fixed;inset:0;z-index:5000;background:rgba(10,25,30,.45);display:flex;align-items:center;justify-content:center;
@@ -766,7 +766,7 @@ function refreshGlobal(){
   const n=ISLANDS.filter(it=>islandPct(it)>=1).length;
   document.getElementById('progress').innerHTML=`完成 <b>${n}</b> / ${ISLANDS.length} 站 · 總進度 <b>${P(overall())}%</b>`;
   ISLANDS.forEach(it=>{ if(!it.lbl) return; const p=P(islandPct(it));
-    it.lbl.querySelector('.done').textContent = p>=100?' ✓':` ${p}%`; it.lbl.querySelector('.bar i').style.width=p+'%'; });
+    const el=it.lbl.querySelector('.done'); el.textContent=p>=100?'✓':p+'%'; el.classList.toggle('dn',p>=100); });
 }
 document.getElementById('swatches').innerHTML=ISLANDS.map(it=>`<i style="background:${it.c}" title="${it.name}"></i>`).join('');
 
@@ -1236,7 +1236,7 @@ function initThree(){
     g.userData={lm,phase:i*.9,ext:(ext+T)*SC}; scene.add(g); groups.push(g);
     const lbl=document.createElement('button'); lbl.className='lbl'; lbl.type='button';
     lbl.style.setProperty('--c',it.c); lbl.style.setProperty('--cd',it.cd);
-    lbl.innerHTML=`<span class="n">${i+1}</span>${it.name}<span class="rg">${it.region}</span><span class="done"></span><span class="bar"><i></i></span>`;
+    lbl.innerHTML=`<b>${i+1}</b><span class="nm">${it.name}</span><em class="done"></em>`; lbl.setAttribute('aria-label',`第 ${i+1} 站 ${it.name}`);
     lbl.addEventListener('click',()=>request(i));
     labelsEl.appendChild(lbl); it.lbl=lbl;
   });
@@ -1282,7 +1282,7 @@ function initThree(){
   let az=0, el=1.05, dist=60, distGoal=60, elGoal=1.05, dragging=false;
   const target=center.clone(), goal=center.clone();
   const fovT=Math.tan(THREE.MathUtils.degToRad(20));
-  const overDist=()=>{ const a=camera.aspect||1; return Math.max(size.x/2/(fovT*a), size.z/2*Math.sin(1.05)/fovT)*1.04; };
+  const overDist=()=>{ const a=camera.aspect||1; return Math.max(size.x/2/(fovT*a), size.z/2*Math.sin(1.05)/fovT)*1.14; };
   const zoomDist=i=>Math.max(10, groups[i].userData.ext*2.5)*(stage.clientWidth<520?1.35:1);
   const placeCam=()=>{ camera.position.set(target.x+dist*Math.sin(az)*Math.cos(el),target.y+dist*Math.sin(el),target.z+dist*Math.cos(az)*Math.cos(el)); camera.lookAt(target); };
   function resize(){ const w=stage.clientWidth,h=stage.clientHeight; renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); if(!zoomed&&!traveling) distGoal=overDist(); }
@@ -1378,7 +1378,7 @@ function initThree(){
   let trip=null;
   const tmp=new THREE.Vector3(), clock=new THREE.Clock(); let lastT=0;
   (function frame(){
-    const t=clock.getElapsedTime(), k=reduce?1:.06, dt=Math.min(.1,t-lastT); lastT=t; dayNight(dt); animHero(t);
+    const t=clock.getElapsedTime(), dt=Math.min(.1,t-lastT), k=reduce?1:1-Math.exp(-dt*3.5); lastT=t; dayNight(dt); animHero(t);
     if(trip){
       const u=Math.min(1,(t-trip.t0)/trip.dur), e=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
       if(trail) trail.g.children.forEach(d=>{ d.visible=d.userData.u<=e; });
@@ -1389,21 +1389,26 @@ function initThree(){
       if(u>=1){ const to=trip.to; trip=null; if(trail) trail.fade=t; traveling=false; placeHero(to); traveler.visible=false; traveling=false; travelEl.hidden=true; arrive(to); }
     }
     if(trail&&trail.fade!==null){ const f=1-(t-trail.fade)/1.6; if(f<=0){ scene.remove(trail.g); trail=null; } else trail.m.opacity=.85*f; }
-    target.lerp(goal,trip?.12:k); dist+=(distGoal-dist)*k; if(!dragging) el+=(elGoal-el)*k;
+    target.lerp(goal,trip?1-Math.exp(-dt*8):k); if(target.distanceToSquared(goal)<1e-6) target.copy(goal);
+    dist+=(distGoal-dist)*k; if(Math.abs(distGoal-dist)<1e-3) dist=distGoal;
+    if(!dragging){ el+=(elGoal-el)*k; if(Math.abs(elGoal-el)<1e-4) el=elGoal; }
     scene.fog.near=dist*1.6; scene.fog.far=dist*4;
     placeCam();
     const w=stage.clientWidth,h=stage.clientHeight;
     groups.forEach((g,i)=>{
       g.position.y+=(((i===current&&zoomed)?.25:0)+(reduce?0:Math.sin(t*1.1+g.userData.phase)*.05)-g.position.y)*.1;
       if(!reduce && g.userData.lm.userData.anim) g.userData.lm.userData.anim(t);
-      tmp.set(g.position.x,g.position.y+3.6,g.position.z).project(camera);
-      const l=ISLANDS[i].lbl, off=tmp.z>1||Math.abs(tmp.x)>1.15||Math.abs(tmp.y)>1.15;
-      l.hidden=off; if(!off){ l.style.left=((tmp.x+1)/2*w)+'px'; l.style.top=((1-tmp.y)/2*h)+'px'; l.style.zIndex=String(Math.round((1-tmp.z)*1000)); }
+      if(i===0) labelsEl.classList.toggle('narrow',w<560);
     });
     if(!reduce) anims.forEach(f=>f(t));
     if(!reduce) parked.forEach((v,n)=>{ const d=v.userData; const u=.5+Math.sin(t*.4+n)*.06; v.position.copy(d.curve.getPoint(u)); if(d.ride==='ship') v.position.y=-.55+Math.sin(t*3+n)*.05; else v.position.y+=Math.sin(t*1.5+n)*.15;
       v.lookAt(d.curve.getPoint(u+.01).setY(v.position.y)); v.visible=!(trip&&trip.leg===n); });
-    renderer.render(scene,camera); requestAnimationFrame(frame);
+    renderer.render(scene,camera);
+    // 標籤：固定在島的前緣地面（不跟著漂浮動畫），用小數像素的 transform 移動，避免抖動
+    groups.forEach((g,i)=>{ const l=ISLANDS[i].lbl; tmp.set(g.position.x,.5,g.position.z+g.userData.ext*.62).project(camera);
+      if(tmp.z>1||Math.abs(tmp.x)>1.2||Math.abs(tmp.y)>1.2){ l.style.visibility='hidden'; return; }
+      l.style.visibility=''; l.style.transform=`translate3d(${((tmp.x+1)/2*w).toFixed(1)}px,${((1-tmp.y)/2*h).toFixed(1)}px,0) translate(-50%,-50%)`; });
+    requestAnimationFrame(frame);
   })();
 
   three={
@@ -1433,7 +1438,7 @@ function initThree(){
 
 function travel(from,to){
   if(!three){ select(to,true); return; }
-  traveling=true; zoomed=false; ovBtn.hidden=true;
+  traveling=true; zoomed=false; ovBtn.hidden=true; labelsEl.classList.add('focused');
   const ride=three.travel(from,to);
   travelEl.textContent=`搭${RIDE[ride]}前往第 ${to+1} 站 ${ISLANDS[to].name}（${ISLANDS[to].region}）…`; travelEl.hidden=false;
   ISLANDS.forEach((it,k)=>it.lbl&&it.lbl.classList.toggle('on',k===to));
@@ -1447,11 +1452,12 @@ function select(i,zoom){
   current=i; zoomed=!!zoom&&!!three;
   ISLANDS.forEach((it,k)=>it.lbl&&it.lbl.classList.toggle('on',k===i));
   if(three){ three.focus(i,zoomed); three.placeHero(i); }
+  labelsEl.classList.toggle('focused',zoomed);
   ovBtn.hidden=!zoomed;
   if(panel.scrollTop) panel.scrollTop=0;
   renderPanel(i); refreshGlobal();
 }
-ovBtn.addEventListener('click',()=>{ if(traveling) return; zoomed=false; ovBtn.hidden=true; if(three) three.focus(current,false); });
+ovBtn.addEventListener('click',()=>{ if(traveling) return; zoomed=false; ovBtn.hidden=true; labelsEl.classList.remove('focused'); if(three) three.focus(current,false); });
 
 try{ initThree(); }catch(e){ console.error(e); three=null; }
 if(!three){
@@ -1461,7 +1467,7 @@ if(!three){
   labelsEl.innerHTML='';
   ISLANDS.forEach((it,i)=>{ const b=document.createElement('button'); b.className='lbl'; b.type='button';
     Object.assign(b.style,{position:'static',transform:'none'}); b.style.setProperty('--c',it.c); b.style.setProperty('--cd',it.cd);
-    b.innerHTML=`<span class="n">${i+1}</span>${it.name}<span class="rg">${it.region}</span><span class="done"></span><span class="bar"><i></i></span>`; b.onclick=()=>request(i); labelsEl.appendChild(b); it.lbl=b; });
+    b.innerHTML=`<b>${i+1}</b><span class="nm">${it.name}</span><em class="done"></em>`; b.onclick=()=>request(i); labelsEl.appendChild(b); it.lbl=b; });
 }
 // 回到上次學到的島
 let start=0; for(let i=0;i<ISLANDS.length;i++){ if(islandPct(ISLANDS[i])<1){ start=i; break; } if(i===ISLANDS.length-1) start=i; }
