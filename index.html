@@ -68,6 +68,9 @@ h1{font-family:var(--display);font-weight:700;font-size:clamp(1.5rem,4.5vw,2.2re
 .lbl .done.dn{background:var(--ok);color:#fff}
 .lbl.on{outline:3px solid var(--c);outline-offset:1px}
 .labels.focused .lbl{opacity:0;pointer-events:none}
+.lbl.padlbl{pointer-events:none;font-size:12px;padding:2px 10px 2px 2px}
+.lbl.padlbl b{background:#58616b;width:24px;height:24px;font-size:12px}
+
 .labels.narrow .lbl{padding:2px;gap:0}
 .labels.narrow .lbl .nm,.labels.narrow .lbl .done{display:none}
 .labels.narrow .lbl b{width:26px;height:26px;font-size:12px;border-width:2px}
@@ -737,19 +740,19 @@ drawPolygon(6, 50);` },
 const byId=Object.fromEntries(RAW.map(i=>[i.id,i]));
 // [島, 地圖位置 x,z, 地塊數, 前往下一站的交通工具]
 const PLAN=[
-  [byId.events, 25,-5, 4,'ship'],
-  [byId.motion, 31,-12,5,'plane'],
-  [byId.looks,  23, 5, 5,'ship'],
-  [byId.sound,  32,14, 7,'plane'],
-  [byId.loop,   15,-3, 7,'ship'],
-  [byId.sensing, 3, 5,12,'balloon'],
-  [byId.ops,     2,-14,9,'plane'],
-  [byId.vars,  -15,11,10,'balloon'],
-  [byId.if,    -24,-10,13,'ship'],
+  [byId.events, 25,-5, 4,'heli'],
+  [byId.motion, 31,-12,5,'heli'],
+  [byId.looks,  23, 5, 5,'heli'],
+  [byId.sound,  32,14, 7,'heli'],
+  [byId.loop,   15,-3, 7,'heli'],
+  [byId.sensing, 3, 5,12,'heli'],
+  [byId.ops,     2,-14,9,'heli'],
+  [byId.vars,  -15,11,10,'heli'],
+  [byId.if,    -24,-10,13,'heli'],
   [byId.my,    -11,-22,7,null],
 ];
 const ISLANDS=PLAN.map(([it,x,z,size,ride])=>({...it,x,z,size,ride,c:CAT[it.cat][0],cd:CAT[it.cat][1]}));
-const RIDE={ship:'船',plane:'飛機',balloon:'熱氣球'};
+const RIDE={heli:'直升機'};
 
 // ================= 進度（每一區的每個段落都是一個檢查點） =================
 const KEY='scratch-world-progress';
@@ -838,7 +841,7 @@ dlg.querySelector('#dlgSkip').addEventListener('click',()=>{ if(dlgTimer){ clear
 const greeted=new Set();
 function greet(i){
   if(!hero) return; const it=ISLANDS[i], p=P(islandPct(it)), nxt=ISLANDS[i+1]; greeted.add(i);
-  if(p>=100) return showDialog(it,[`又見面了，${hero.name}！你已經拿到「${BADGE[it.id]}徽章」。`, nxt?`下一站「${nxt.name}」在等你，到港口搭${RIDE[it.ride]}出發吧。`:'十座島都完成了，隨時回來複習吧！']);
+  if(p>=100) return showDialog(it,[`又見面了，${hero.name}！你已經拿到「${BADGE[it.id]}徽章」。`, nxt?`下一站「${nxt.name}」在等你，呼叫直升機來接你吧。`:'十座島都完成了，隨時回來複習吧！']);
   showDialog(it,[`歡迎來到${it.region}，${hero.name}！我是${CHIEF[it.id]}。`, it.lead,
     `每段讀完按「我看懂了」，再通過我的島長任務，就送你「${BADGE[it.id]}徽章」。`,
     p>0?`你已經完成 ${p}%，繼續加油！`:'答錯會扣 1 顆體力，想清楚再作答喔。']);
@@ -847,7 +850,7 @@ function islandComplete(it){
   const i=ISLANDS.indexOf(it), nxt=ISLANDS[i+1];
   toast(`<b>獲得「${BADGE[it.id]}徽章」</b>`,'big'); if(three) three.cheer();
   showDialog(it,[`太厲害了，${hero?hero.name:'冒險家'}！${it.name}的試煉全部通過。`,`這枚「${BADGE[it.id]}徽章」送給你，已經放進背包了。`,
-    nxt?`下一站是「${nxt.name}」，到港口搭${RIDE[it.ride]}出發吧！`:'你走完了十座島，成為真正的 Scratch 冒險家！']);
+    nxt?`下一站是「${nxt.name}」，呼叫直升機來接你吧！`:'你走完了十座島，成為真正的 Scratch 冒險家！']);
 }
 
 // ---------- 角色建立 ----------
@@ -1116,17 +1119,6 @@ function initThree(){
     puzzle(m){ const g=new THREE.Group(); const a=box(.9,.45,.5,m[0]); a.position.set(-.2,.25,0); const knob=cyl(.14,.14,.2,m[0],12); knob.position.set(.35,.25,0); knob.rotation.z=Math.PI/2;
       const gear=mesh(new THREE.TorusGeometry(.32,.1,6,12),m[1]); gear.position.set(.3,.95,0); g.add(a,knob,gear); g.userData.anim=t=>{ gear.rotation.z=t*1.5; }; return g; },
   };
-  const vehicles={
-    ship(){ const g=new THREE.Group(); const hull=box(.55,.28,1.4,mats.red); hull.position.y=.1; const deck=box(.5,.08,1.3,mats.white); deck.position.y=.27;
-      const cab=box(.4,.3,.45,mats.white); cab.position.set(0,.45,-.25); const mast=cyl(.03,.03,1,mats.wood,6); mast.position.set(0,.8,.25);
-      const sail=box(.04,.65,.55,mats.white); sail.position.set(0,.85,.45); g.add(hull,deck,cab,mast,sail); return g; },
-    plane(){ const g=new THREE.Group(); const body=cyl(.16,.12,1.5,mats.white,12); body.rotation.x=Math.PI/2; const nose=mesh(new THREE.ConeGeometry(.16,.35,12),mats.accent); nose.rotation.x=Math.PI/2; nose.position.z=.92;
-      const wing=box(1.8,.05,.4,mats.white); wing.position.z=.1; const tail=box(.6,.05,.22,mats.white); tail.position.z=-.65; const fin=box(.05,.35,.25,mats.accent); fin.position.set(0,.2,-.65);
-      g.add(body,nose,wing,tail,fin); return g; },
-    balloon(){ const g=new THREE.Group(); const env=sph(.6,mats.accent); env.scale.y=1.15; env.position.y=1.2; const band=mesh(new THREE.TorusGeometry(.6,.05,6,24),mats.white); band.rotation.x=Math.PI/2; band.position.y=1.2;
-      const basket=box(.32,.25,.32,mats.wood); basket.position.y=.15; [[-.13,-.13],[.13,-.13],[-.13,.13],[.13,.13]].forEach(([x,z])=>{ const l=cyl(.012,.012,.7,mats.trunk,4); l.position.set(x,.6,z); g.add(l); });
-      g.add(env,band,basket); return g; },
-  };
 
   // ---------- 島上的建築、人物、物件 ----------
   mats.skin=M(0xf1c7a0); mats.glass=M(0xbfe8ff);
@@ -1275,39 +1267,7 @@ function initThree(){
     groups.forEach((g,i)=>g.position.set(P[i].x,0,P[i].z));
   })();
 
-  // 航線：船貼著海面、熱氣球中空、飛機高空
-  // 航線：水平方向是一條微彎的曲線，高度另外算——
-  //   船：一直貼著海面，從岸邊開到岸邊
-  //   飛機：從島上起飛，前 30% 平順爬升、中段平飛、後 30% 下降，降落在目的島上
-  //   熱氣球：從島上慢慢升空，飄過去再降落
-  const LAND=1.4;
-  class Leg extends THREE.Curve{
-    constructor(a,b,ride){
-      super(); this.ride=ride;
-      const A=groups[a].position, B=groups[b].position, dir=new THREE.Vector3(B.x-A.x,0,B.z-A.z).normalize();
-      const off=ride==='ship'?[groups[a].userData.ext*.85,groups[b].userData.ext*.85]:[Math.min(groups[a].userData.ext*.35,2.4),Math.min(groups[b].userData.ext*.35,2.4)];
-      this.P0=new THREE.Vector3(A.x,0,A.z).addScaledVector(dir,off[0]); this.P2=new THREE.Vector3(B.x,0,B.z).addScaledVector(dir,-off[1]);
-      const L=this.P0.distanceTo(this.P2);
-      this.C=this.P0.clone().lerp(this.P2,.5).add(new THREE.Vector3(-dir.z,0,dir.x).multiplyScalar(L*(ride==='ship'?.18:.08)));
-      this.H=ride==='plane'?6+L*.06:ride==='balloon'?3.5+L*.05:0;
-    }
-    getPoint(t,out=new THREE.Vector3()){
-      const u=1-t, P0=this.P0, C=this.C, P2=this.P2;
-      out.set(u*u*P0.x+2*u*t*C.x+t*t*P2.x, 0, u*u*P0.z+2*u*t*C.z+t*t*P2.z);
-      if(this.ride==='ship') out.y=-.45;
-      else if(this.ride==='plane'){ const lift=Math.max(0,Math.min(1,t/.3,(1-t)/.3)); out.y=LAND+this.H*Math.sin(lift*Math.PI/2); }
-      else out.y=LAND+this.H*Math.sin(Math.PI*t);
-      return out;
-    }
-  }
-  const legCurve=(a,b,ride)=>new Leg(a,b,ride);
-  const dotG=new THREE.SphereGeometry(.12,8,8), parked=[]; let trail=null;
-  for(let i=0;i<groups.length-1;i++){
-    const ride=ISLANDS[i].ride, c=legCurve(i,i+1,ride), len=c.getLength(), n=Math.round(len*1.6);
-    const v=vehicles[ride](); v.scale.setScalar(1.4); const u=.5; v.position.copy(c.getPoint(u)); v.lookAt(c.getPoint(u+.02)); v.userData={curve:c,u,ride};
-    scene.add(v); parked.push(v);
-  }
-  const traveler=new THREE.Group(); scene.add(traveler); traveler.visible=false;
+  const dotG=new THREE.SphereGeometry(.12,8,8); let trail=null;
 
   // 地圖範圍
   const box3=new THREE.Box3(); groups.forEach(g=>{ box3.expandByPoint(g.position.clone().addScalar(g.userData.ext)); box3.expandByPoint(g.position.clone().addScalar(-g.userData.ext)); });
@@ -1357,7 +1317,7 @@ function initThree(){
   const cloudM=new THREE.MeshStandardMaterial({color:0xffffff,roughness:1,transparent:true,opacity:.92});
   const clouds=[]; for(let k=0;k<8;k++){ const c=new THREE.Group(); const n=3+Math.floor(Math.random()*3);
     for(let j=0;j<n;j++){ const s=new THREE.Mesh(new THREE.SphereGeometry(.9+Math.random()*.7,12,10),cloudM); s.position.set(j*1.1-(n*.55),Math.random()*.4,(Math.random()-.5)*.8); s.scale.y=.65; c.add(s); }
-    c.position.set(center.x+(Math.random()-.5)*size.x*1.2, 8+Math.random()*3, center.z+(Math.random()-.5)*size.z*1.1); c.userData.v=.4+Math.random()*.5; scene.add(c); clouds.push(c); }
+    c.position.set(center.x+(Math.random()-.5)*size.x*1.2, 12+Math.random()*3, center.z+(Math.random()-.5)*size.z*1.1); c.userData.v=.4+Math.random()*.5; scene.add(c); clouds.push(c); }
   const moon=new THREE.Mesh(new THREE.SphereGeometry(3,20,16),new THREE.MeshBasicMaterial({color:0xfff6d8,fog:false,transparent:true,opacity:0})); scene.add(moon);
   const sm=x=>x<=0?0:x>=1?1:x*x*(3-2*x);
   let nightF=0;
@@ -1372,7 +1332,7 @@ function initThree(){
     nightF=h<5||h>=21?1:h<7?sm((7-h)/2):h>=18.5?sm((h-18.5)/2.5):0;
     starM.opacity=nightF; glM.opacity=nightF*(.45+.25*Math.sin(performance.now()/300));
     mats.glass.emissive.copy(warm).multiplyScalar(nightF*.9);
-    cloudM.color.setRGB(1-nightF*.55,1-nightF*.5,1-nightF*.35); cloudM.opacity=.92-nightF*.35;
+    cloudM.color.setRGB(1-nightF*.55,1-nightF*.5,1-nightF*.35); cloudM.opacity=(.92-nightF*.35)*Math.min(1,Math.max(.1,(dist-24)/22)); cloudM.depthWrite=cloudM.opacity>.8;
     moon.material.opacity=nightF; moon.position.set(center.x-Math.cos(ang)*120, 70+Math.sin(ang)*40, center.z-150);
     if(!reduce) clouds.forEach(c=>{ c.position.x+=c.userData.v*dt; if(c.position.x>center.x+size.x*.7) c.position.x=center.x-size.x*.7; });
   }
@@ -1380,7 +1340,7 @@ function initThree(){
   // ---------- 冒險者（玩家角色） ----------
   const heroRoot=new THREE.Group(); let heroBody=null, heroMat=null, cheerT=-9, hurtT=-9;
   function buildHero(){
-    heroRoot.clear(); if(!hero) return;
+    if(heroBody){ heroRoot.remove(heroBody); heroBody=null; } if(!hero) return;
     const col=CLASSES[hero.cls].color; heroMat=M(col);
     const g=new THREE.Group();
     const legs=[-.06,.06].map(x=>{ const l=cyl(.04,.04,.18,mats.trunk,6); l.position.set(x,.09,0); return l; });
@@ -1412,22 +1372,117 @@ function initThree(){
     heroBody.children.forEach(c=>{ if(c.userData.marker){ c.position.y=1.15+Math.sin(t*3)*.05; c.rotation.y=t*2; } });
   }
 
-  let trip=null;
+  // ---------- 停機坪與直升機 ----------
+  const V3=(x=0,y=0,z=0)=>new THREE.Vector3(x,y,z);
+  const PAD_R=2.0, PAD_TOP=.62, ALT=8;
+  const padPos=(()=>{ let best=null,bs=-1e9;
+    for(let x=box3.min.x;x<=box3.max.x;x+=.8) for(let z=box3.min.z;z<=box3.max.z;z+=.8){
+      let cl=1e9; groups.forEach(g=>{ cl=Math.min(cl,Math.hypot(x-g.position.x,z-g.position.z)-g.userData.ext); });
+      const sc=Math.min(cl,5)-.12*Math.hypot(x-center.x,z-center.z);
+      if(cl>PAD_R+1.4&&sc>bs){ bs=sc; best=[x,z]; } }
+    return best||[center.x,center.z]; })();
+  const padTop=V3(padPos[0],PAD_TOP,padPos[1]);
+  { const pad=new THREE.Group(); pad.position.set(padPos[0],0,padPos[1]);
+    const cl=cyl(PAD_R*1.05,PAD_R*.95,1.3,M(0x7d8792),6); cl.position.y=-.03;
+    const top=cyl(PAD_R,PAD_R,.12,M(0x58616b),24); top.position.y=.56;
+    const ring=mesh(new THREE.TorusGeometry(PAD_R*.72,.06,6,40),M(0xffd23f)); ring.rotation.x=Math.PI/2; ring.position.y=.63;
+    const hm=mats.white, hl=box(.16,.03,.9,hm), hr=box(.16,.03,.9,hm), hc=box(.6,.03,.16,hm); hl.position.set(-.3,.63,0); hr.position.set(.3,.63,0); hc.position.set(0,.63,0);
+    const pole=cyl(.03,.03,1.3,mats.white,6); pole.position.set(PAD_R*.78,1.25,PAD_R*.35);
+    const sock=mesh(new THREE.ConeGeometry(.13,.55,10,1,true),M(0xff6a2a)); sock.material.side=THREE.DoubleSide; sock.rotation.z=Math.PI/2; sock.position.set(PAD_R*.78+.28,1.8,PAD_R*.35);
+    const lamps=[]; for(let k=0;k<6;k++){ const a=k/6*Math.PI*2, lm=M(0x6fd36f); const l=sph(.06,lm); l.position.set(Math.cos(a)*PAD_R*.93,.66,Math.sin(a)*PAD_R*.93); pad.add(l); lamps.push(lm); }
+    pad.add(cl,top,ring,hl,hr,hc,pole,sock); scene.add(pad);
+    anims.push(t=>{ sock.rotation.y=Math.sin(t*1.3)*.3; lamps.forEach((m,k)=>m.emissive.setRGB(0,(Math.sin(t*3-k)+1)*.35,0)); }); }
+  const padLbl=document.createElement('div'); padLbl.className='lbl padlbl'; padLbl.innerHTML='<b>H</b><span class="nm">停機坪</span>'; labelsEl.appendChild(padLbl);
+
+  function buildHeli(){
+    const g=new THREE.Group(), red=M(0xe2483d), dark=M(0x34444a);
+    const body=mesh(new THREE.SphereGeometry(.55,18,14),red); body.scale.set(1,.85,1.25); body.position.y=.75;
+    const glass=mesh(new THREE.SphereGeometry(.43,16,12,0,Math.PI*2,0,Math.PI/2),mats.glass); glass.rotation.x=Math.PI/2.3; glass.position.set(0,.84,.36);
+    const stripe=mesh(new THREE.TorusGeometry(.56,.04,6,24),mats.white); stripe.rotation.y=Math.PI/2; stripe.scale.set(1.25,.86,1); stripe.position.y=.75;
+    const tail=cyl(.06,.14,1.5,red,8); tail.rotation.x=Math.PI/2; tail.position.set(0,.88,-1.25);
+    const fin=box(.05,.42,.26,red); fin.position.set(0,1.08,-1.95);
+    const trotor=new THREE.Group(); trotor.position.set(.08,1.0,-1.95); trotor.add(box(.02,.55,.06,dark));
+    const skidL=box(.05,.05,1.35,dark), skidR=box(.05,.05,1.35,dark); skidL.position.set(-.38,.06,.05); skidR.position.set(.38,.06,.05);
+    [[-.38,.35],[.38,.35],[-.38,-.3],[.38,-.3]].forEach(([x,z])=>{ const s=cyl(.025,.025,.36,dark,4); s.position.set(x,.24,z); g.add(s); });
+    const mast=cyl(.05,.05,.26,dark,6); mast.position.y=1.38;
+    const rotor=new THREE.Group(); rotor.position.y=1.52; rotor.add(box(2.7,.03,.14,dark),box(.14,.03,2.7,dark));
+    g.add(body,glass,stripe,tail,fin,trotor,skidL,skidR,mast,rotor); g.userData={rotor,trotor}; g.rotation.order='YXZ'; return g;
+  }
+  const heli=buildHeli(); heli.scale.setScalar(1.15); heli.position.copy(padTop); scene.add(heli);
+  let spinGoal=.04, spin=.04;
+
+  // 降落傘（掛在冒險者身上）
+  const chute=new THREE.Group(); chute.visible=false; heroRoot.add(chute);
+  const chuteMats=[M(0xffffff),M(0xffffff)];
+  for(let k=0;k<8;k++){ const sl=mesh(new THREE.SphereGeometry(.85,6,8,k/8*Math.PI*2,Math.PI/4,0,Math.PI/2.3),chuteMats[k%2]); sl.material.side=THREE.DoubleSide; sl.position.y=1.9; chute.add(sl); }
+  for(let k=0;k<4;k++){ const a=k/4*Math.PI*2+Math.PI/4, rx=Math.cos(a)*.62, rz=Math.sin(a)*.62;
+    const a0=V3(0,.62,0), a1=V3(rx,2.05,rz), dv=a1.clone().sub(a0);
+    const ln=cyl(.01,.01,dv.length(),M(0x444444),3); ln.position.copy(a0).addScaledVector(dv,.5); ln.quaternion.setFromUnitVectors(V3(0,1,0),dv.normalize()); chute.add(ln); }
+  function tintChute(){ chuteMats[0].color.set(hero?CLASSES[hero.cls].color:'#ff6680'); }
+
+  // 工作排程：每個動作在指定時間開始，跑完呼叫 done
+  let jobs=[], follow=null, trailOn=false;
+  const addJob=(t0,dur,fn,done)=>{ jobs.push({t0,dur,fn,done,fin:false}); return dur; };
+  const ease=u=>u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
+  const angDiff=(a,b)=>((b-a+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
+  const spotW=i=>V3(.15,.27,.82).multiplyScalar(SC).add(groups[i].position);
+  // 直升機飛行：先爬升、平飛、再下降到 B 的高度（B 在高空就停在高空）
+  function flyJob(t0,A,B,done,onStart){
+    const L=Math.hypot(B.x-A.x,B.z-A.z), dur=reduce?.01:Math.max(1.6,Math.min(5,L/9+1.2));
+    let yaw0=null, yaw=null;
+    return addJob(t0,dur,u=>{
+      if(yaw0===null){ yaw0=heli.rotation.y; yaw=L>.5?Math.atan2(B.x-A.x,B.z-A.z):yaw0; if(onStart) onStart(); }
+      const h=ease(Math.max(0,Math.min(1,(u-.14)/.72)));
+      const up=A.y+(ALT-A.y)*ease(Math.min(1,u/.25)), down=B.y+(ALT-B.y)*ease(Math.min(1,(1-u)/.25));
+      heli.position.set(A.x+(B.x-A.x)*h, Math.min(up,down), A.z+(B.z-A.z)*h);
+      heli.rotation.y=yaw0+angDiff(yaw0,yaw)*ease(Math.min(1,u/.18));
+      heli.rotation.x=L>1?Math.sin(Math.PI*Math.max(0,Math.min(1,(u-.14)/.72)))*.22:0;
+    },done);
+  }
+  function heliTrip(from,to,onPhase,onLand){
+    jobs=[]; trailOn=false; if(trail){ scene.remove(trail.g); trail=null; }
+    tintChute(); spinGoal=1;
+    const t=clock.getElapsedTime(), pick=spotW(from), drop=spotW(to);
+    const hoverPick=pick.clone().setY(pick.y+1.0), over=drop.clone().setY(ALT);
+    scene.attach(heroRoot); const base=heroRoot.scale.x; heroRoot.visible=true; chute.visible=false;
+    let T=t; follow=()=>heli.position;
+    const nearPick=heli.position.distanceTo(hoverPick)<.5;
+    onPhase('pad');
+    T+=nearPick?0:flyJob(T,heli.position.clone(),hoverPick,null);
+    // 登機
+    let boarded=false;
+    T+=addJob(T,reduce?.01:.8,u=>{ if(!boarded){ boarded=true; onPhase('board'); }
+      heroRoot.position.lerpVectors(pick,hoverPick.clone().add(V3(0,.4,0)),ease(u)); heroRoot.scale.setScalar(base*(1-.75*u)); },
+      ()=>{ heroRoot.visible=false; });
+    // 飛到目的島上空（沿路留下虛線）
+    T+=flyJob(T,hoverPick.clone(),over,()=>{ trailOn=false; },()=>{ trailOn=true; onPhase('fly'); });
+    // 跳傘
+    let started=false;
+    addJob(T,reduce?.01:3.4,u=>{
+      if(!started){ started=true; onPhase('jump'); heroRoot.visible=true; heroRoot.scale.setScalar(base); chute.visible=true; follow=()=>heroRoot.position; }
+      const S=over.clone().add(V3(0,-.6,0));
+      const free=Math.min(1,u/.12), open=Math.min(1,Math.max(0,(u-.08)/.12));
+      chute.scale.setScalar(.05+.95*ease(open));
+      const yU=u<.12?.12*free*free:(.12+(u-.12)/.88*.88);
+      heroRoot.position.set(S.x+(drop.x-S.x)*ease(u), S.y+(drop.y-S.y)*Math.min(1,yU), S.z+(drop.z-S.z)*ease(u));
+      heroRoot.rotation.set(0,0,reduce?0:Math.sin(clock.getElapsedTime()*2.2)*.16*(1-u));
+    },()=>{ chute.visible=false; heroRoot.rotation.set(0,0,0); follow=null; if(trail) trail.fade=clock.getElapsedTime(); onLand(); });
+    // 直升機回停機坪
+    flyJob(T+.5,over,padTop,()=>{ spinGoal=.04; heli.rotation.x=0; });
+  }
+
   const tmp=new THREE.Vector3(), clock=new THREE.Clock(); let lastT=0;
   (function frame(){
     const t=clock.getElapsedTime(), dt=Math.min(.1,t-lastT), k=reduce?1:1-Math.exp(-dt*3.5); lastT=t; dayNight(dt); animHero(t);
-    if(trip){
-      const u=Math.min(1,(t-trip.t0)/trip.dur), e=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
-      if(trail) trail.g.children.forEach(d=>{ d.visible=d.userData.u<=e; });
-      const p=trip.curve.getPoint(e); traveler.position.copy(p); if(trip.ride==='ship') traveler.position.y=-.55+Math.sin(t*4)*.05;
-      { const ahead=trip.curve.getPoint(Math.min(1,e+.012)); if(trip.ride!=='plane') ahead.y=traveler.position.y;
-        if(ahead.distanceToSquared(traveler.position)>1e-6) traveler.lookAt(ahead); }
-      if(trip.ride==='plane'){ const cruise=Math.max(0,Math.min(1,e/.3,(1-e)/.3)); traveler.rotateZ(Math.sin(e*Math.PI*2)*.18*cruise); }
-      goal.copy(p); goal.y=Math.max(0,p.y*.6);
-      if(u>=1){ const to=trip.to; trip=null; if(trail) trail.fade=t; traveling=false; placeHero(to); traveler.visible=false; traveling=false; travelEl.hidden=true; arrive(to); }
-    }
+    jobs.forEach(j=>{ if(j.fin||t<j.t0) return; const u=Math.min(1,(t-j.t0)/j.dur); j.fn(u,t); if(u>=1){ j.fin=true; if(j.done) j.done(); } });
+    jobs=jobs.filter(j=>!j.fin);
+    spin+=(spinGoal-spin)*(1-Math.exp(-dt*1.5)); heli.userData.rotor.rotation.y+=dt*32*spin; heli.userData.trotor.rotation.x+=dt*45*spin;
+    if(spin>.3&&!reduce) heli.position.y+=Math.sin(t*5)*.004;
+    if(trailOn){ if(!trail){ const tm=mats.route.clone(); tm.opacity=.85; trail={g:new THREE.Group(),m:tm,fade:null,last:heli.position.clone()}; scene.add(trail.g); }
+      if(heli.position.distanceTo(trail.last)>.9){ const d=new THREE.Mesh(dotG,trail.m); d.position.copy(heli.position); d.position.y-=.2; trail.g.add(d); trail.last.copy(heli.position); } }
+    if(follow){ const p=follow(); goal.copy(p); goal.y=Math.max(0,p.y*.5); }
     if(trail&&trail.fade!==null){ const f=1-(t-trail.fade)/1.6; if(f<=0){ scene.remove(trail.g); trail=null; } else trail.m.opacity=.85*f; }
-    target.lerp(goal,trip?1-Math.exp(-dt*8):k); if(target.distanceToSquared(goal)<1e-6) target.copy(goal);
+    target.lerp(goal,follow?1-Math.exp(-dt*5):k); if(target.distanceToSquared(goal)<1e-6) target.copy(goal);
     dist+=(distGoal-dist)*k; if(Math.abs(distGoal-dist)<1e-3) dist=distGoal;
     if(!dragging){ el+=(elGoal-el)*k; if(Math.abs(elGoal-el)<1e-4) el=elGoal; }
     scene.fog.near=dist*1.6; scene.fog.far=dist*4;
@@ -1439,13 +1494,14 @@ function initThree(){
       if(i===0) labelsEl.classList.toggle('narrow',w<560);
     });
     if(!reduce) anims.forEach(f=>f(t));
-    if(!reduce) parked.forEach((v,n)=>{ const d=v.userData; const u=.5+Math.sin(t*.4+n)*.06; v.position.copy(d.curve.getPoint(u)); if(d.ride==='ship') v.position.y=-.55+Math.sin(t*3+n)*.05; else v.position.y+=Math.sin(t*1.5+n)*.15;
-      v.lookAt(d.curve.getPoint(u+.01).setY(v.position.y)); v.visible=!(trip&&trip.leg===n); });
     renderer.render(scene,camera);
     // 標籤：固定在島的前緣地面（不跟著漂浮動畫），用小數像素的 transform 移動，避免抖動
     groups.forEach((g,i)=>{ const l=ISLANDS[i].lbl; tmp.set(g.position.x,.5,g.position.z+g.userData.ext*.62).project(camera);
       if(tmp.z>1||Math.abs(tmp.x)>1.2||Math.abs(tmp.y)>1.2){ l.style.visibility='hidden'; return; }
       l.style.visibility=''; l.style.transform=`translate3d(${((tmp.x+1)/2*w).toFixed(1)}px,${((1-tmp.y)/2*h).toFixed(1)}px,0) translate(-50%,-50%)`; });
+    tmp.set(padPos[0],.6,padPos[1]+PAD_R*1.05).project(camera);
+    if(tmp.z>1||Math.abs(tmp.x)>1.2||Math.abs(tmp.y)>1.2) padLbl.style.visibility='hidden';
+    else { padLbl.style.visibility=''; padLbl.style.transform=`translate3d(${((tmp.x+1)/2*w).toFixed(1)}px,${((1-tmp.y)/2*h).toFixed(1)}px,0) translate(-50%,-50%)`; }
     requestAnimationFrame(frame);
   })();
 
@@ -1455,19 +1511,9 @@ function initThree(){
       if(zoom){ const p=groups[i].position; goal.set(p.x,.6,p.z); distGoal=zoomDist(i); elGoal=.62; }
       else { goal.copy(center); distGoal=overDist(); elGoal=1.05; }
     },
-    travel(from,to){
-      const adj=Math.abs(to-from)===1, a=Math.min(from,to), ride=adj?ISLANDS[a].ride:'plane';
-      let curve=legCurve(from,to,ride);
-      traveler.clear(); const vh=vehicles[ride](); vh.scale.setScalar(1.6); traveler.add(vh); traveler.visible=true;
-      if(hero){ traveler.add(heroRoot); heroRoot.position.set(0,ride==='plane'?.28:.45,ride==='ship'?-.15:0); heroRoot.rotation.set(0,0,0); heroRoot.scale.setScalar(1.3); }
-      const dur=reduce?.01:Math.min(5,Math.max(2.4,curve.getLength()/9));
-      if(trail) scene.remove(trail.g);
-      const tm=mats.route.clone(); tm.opacity=.85; const tg=new THREE.Group(), tn=Math.max(8,Math.round(curve.getLength()*1.6));
-      for(let k=1;k<tn;k++){ const d=new THREE.Mesh(dotG,tm); d.position.copy(curve.getPoint(k/tn)); if(ride==='ship') d.position.y=-.5; d.visible=false; d.userData.u=k/tn; tg.add(d); }
-      scene.add(tg); trail={g:tg,m:tm,fade:null};
-      trip={curve,ride,to,t0:clock.getElapsedTime(),dur,leg:adj?a:-1};
-      distGoal=ride==='plane'?34:24; elGoal=ride==='ship'?.55:.75;
-      return ride;
+    travel(from,to,onPhase,onLand){
+      distGoal=26; elGoal=.78;
+      heliTrip(from,to,onPhase,()=>{ traveling=false; placeHero(to); onLand(); });
     }
   };
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>setTimeout(applyColors,0));
@@ -1477,9 +1523,12 @@ function initThree(){
 function travel(from,to){
   if(!three){ select(to,true); return; }
   traveling=true; zoomed=false; ovBtn.hidden=true; labelsEl.classList.add('focused');
-  const ride=three.travel(from,to);
-  travelEl.textContent=`搭${RIDE[ride]}前往第 ${to+1} 站 ${ISLANDS[to].name}（${ISLANDS[to].region}）…`; travelEl.hidden=false;
+  const tgt=ISLANDS[to], cur=ISLANDS[from];
+  const say={pad:`直升機從停機坪起飛，前往${cur.name}接你…`, board:'登機！',
+    fly:`直升機飛往第 ${to+1} 站 ${tgt.name}（${tgt.region}）…`, jump:`跳傘！降落到${tgt.name}…`};
+  travelEl.textContent=say.pad; travelEl.hidden=false;
   ISLANDS.forEach((it,k)=>it.lbl&&it.lbl.classList.toggle('on',k===to));
+  three.travel(from,to,ph=>{ travelEl.textContent=say[ph]||''; },()=>{ travelEl.hidden=true; arrive(to); });
   if(innerWidth<960) stage.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
 }
 function arrive(to){
