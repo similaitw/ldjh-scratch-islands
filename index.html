@@ -433,7 +433,7 @@ sprite.x += 10;   // x 改變 10
 
 // 網頁 canvas 的 y 往下才變大
 ctx.drawImage(img, sprite.x, sprite.y);` },
-      oops:['0 度是朝上，不是朝右','一次「移動 100 點」→ 瞬移，看不到動畫','網頁、遊戲引擎的 y 軸方向和 Scratch 相反'],
+      oops:['0 度是朝上，不是朝右','一次「移動 100 點」→ 瞬移，看不到動畫','x、y 超出舞台範圍，角色會卡在邊緣'],
       tip:'角色反彈後倒立？把迴轉方式設成「左-右」。',
       quest:{ q:`角色在 x: 0、面朝 90 度。執行三次 ${st(`移動 ${S('10')} 點`)}，x 座標是多少？`, a:['30','三十'], hint:'往右，每次加 10。' } }] },
 
@@ -443,7 +443,7 @@ ctx.drawImage(img, sprite.x, sprite.y);` },
    sights:['魔鏡劇場：紅色布幕的舞台','魔法鏡：照一下就變大變小','會變色的演員：圖像效果示範'],
    topics:[
     { id:'look', name:'造型、說話與特效',
-      concept:['「說出」＝<b>輸出</b>，像 Python 的 print()','除錯：用「說出」顯示變數的值','造型有編號，「下一個造型」＝編號 +1','最後一個造型的下一個 → 回到第 1 個','<b>逐格動畫</b> ＝ 換造型 ＋ 短暫等待','圖層決定誰蓋在上面'],
+      concept:['「說出」＝<b>輸出</b>：把結果顯示給人看','除錯：用「說出」顯示變數的值','造型有編號，「下一個造型」＝編號 +1','最後一個造型的下一個 → 回到第 1 個','<b>逐格動畫</b> ＝ 換造型 ＋ 短暫等待','圖層決定誰蓋在上面'],
       blocks:[
         [st(`說出 ${S('你好！')} 持續 ${S('2')} 秒`),'程式會停 2 秒'],
         [st(`說出 ${S('你好！')}`),'氣泡留著，程式馬上繼續'],
@@ -483,7 +483,7 @@ setInterval(() => {
    sights:['音浪音樂廳：巨大喇叭塔','大鼓廣場：一敲就震動','跳舞的樂手：跟著節拍跳'],
    topics:[
     { id:'play', name:'播放與等待',
-      concept:['<b>同步</b>：「直到結束」→ 播完才往下','<b>非同步</b>：「播放音效」→ 邊播邊往下','其他語言也分「會等」和「不會等」的指令','音量是角色的<b>屬性</b>，每個角色各有一個'],
+      concept:['<b>同步</b>：「直到結束」→ 播完才往下','<b>非同步</b>：「播放音效」→ 邊播邊往下','很多積木都分「會等」和「不會等」兩種，例如「說出…持續 2 秒」也會等','音量是角色的<b>屬性</b>，每個角色各有一個'],
       blocks:[
         [st(`播放音效 ${D('喵')} 直到結束`),'同步：播完才往下'],
         [st(`播放音效 ${D('喵')}`),'非同步：邊播邊繼續'],
@@ -512,7 +512,7 @@ meow.onended = () => console.log("播完了");` },
    sights:['無限摩天輪：一直轉、永遠不停','旋轉木馬：每圈轉固定次數','排隊的遊客：一個接一個重複上車'],
    topics:[
     { id:'loop', name:'迴圈',
-      concept:['<b>計數迴圈</b>：知道次數 → 重複 N 次（for）','<b>條件迴圈</b>：做到條件成立 → 重複直到（while）','<b>無限迴圈</b>：一直做 → 重複無限次（while True）','每跑一次 ＝ 一次<b>迭代</b>','<b>巢狀迴圈</b>：外 3 次 × 內 4 次 ＝ 12 次','怎麼選：知道次數用 N 次；等事情發生用直到；遊戲用無限'],
+      concept:['<b>計數迴圈</b>：知道次數 → 重複 N 次','<b>條件迴圈</b>：做到條件成立 → 重複直到','<b>無限迴圈</b>：一直做 → 重複無限次','每跑一次 ＝ 一次<b>迭代</b>','<b>巢狀迴圈</b>：外 3 次 × 內 4 次 ＝ 12 次','怎麼選：知道次數用 N 次；等事情發生用直到；遊戲用無限'],
       blocks:[
         [wait('1'),'暫停一下'],
         [REPEAT(S('10'), st(`移動 ${S('10')} 點`,'motion')),'計數迴圈'],
@@ -534,7 +534,7 @@ while True:               # 重複無限次
 }
 while (!touchingEdge()) { move(5); }
 while (true) { update(); }` },
-      oops:['Scratch「重複直到」成立就停；Python while 成立才繼續（方向相反）','無限迴圈底下不能再接積木','條件永遠不成立 → 停不下來','迴圈裡沒等待 → 太快看不到'],
+      oops:['「重複直到」是條件<b>成立</b>就停，不是成立才做','無限迴圈底下不能再接積木','條件永遠不成立 → 停不下來','迴圈裡沒等待 → 太快看不到'],
       tip:'寫迴圈前先問：我知道要做幾次嗎？',
       quest:{ q:'外層「重複 3 次」，裡面放「重複 4 次」的「說出 嗨」。總共說幾次？', a:['12','十二'], hint:'外層每圈，內層跑 4 次。' } }] },
 
@@ -544,7 +544,7 @@ while (true) { update(); }` },
    sights:['雷達站：一直轉圈掃描','天文台：觀察遠方的動靜','瞭望塔與哨兵：四處張望'],
    topics:[
     { id:'sense', name:'碰撞、輸入、計時',
-      concept:['程式三步驟：<b>輸入 → 處理 → 輸出</b>','偵測島負責輸入','六角形：回報 true / false，放進條件格','圓角：回報數字或文字','「詢問並等待」＝ Python 的 input()','計時器：從綠旗開始數秒'],
+      concept:['程式三步驟：<b>輸入 → 處理 → 輸出</b>','偵測島負責輸入','六角形：回報 true / false，放進條件格','圓角：回報數字或文字','「詢問並等待」讓使用者打字回答','計時器：從綠旗開始數秒'],
       blocks:[
         [touch('鼠標'),'也可選邊緣、其他角色'],
         [bo(`碰到顏色 <span class="slot" style="background:#e33;min-width:16px"></span> ?`),'迷宮撞牆'],
@@ -568,7 +568,7 @@ console.log("你好，" + name);
 document.addEventListener("keydown", e => {
   if (e.key === " ") jump();
 });` },
-      oops:['「詢問的答案」只留最新一次','按鍵帽子會頓一下 → 用迴圈＋偵測','「碰到顏色」要完全同色','Python input() 拿到的是文字'],
+      oops:['「詢問的答案」只留最新一次','按鍵帽子會頓一下 → 用迴圈＋偵測','「碰到顏色」要完全同色','回答的內容要比大小時，記得它可能不是數字（例如打了「十」）'],
       tip:'迷宮：碰到牆的顏色，就往回退同樣的距離。',
       quest:{ q:`${st('計時器重置')} 後 ${wait('2')}，${rp('計時器')} 大約是多少？`, a:['2','二','2秒'], hint:'重置後從 0 開始。' } }] },
 
@@ -578,7 +578,7 @@ document.addEventListener("keydown", e => {
    sights:['加號塔：高原上的地標','巨型算盤：珠子會自己滑動','計算機工坊：數學家們在這裡上班'],
    topics:[
      { id:'arith', name:'四則運算',
-       concept:['+ − * / 是<b>算術運算子</b>','回報積木：吐出一個數字','沒有括號 → 先算最裡面那顆','Python、JS 用括號控制順序'],
+       concept:['+ − * / 是<b>算術運算子</b>','回報積木：吐出一個數字','沒有括號 → 先算最裡面那顆','先算哪一個，就把它放在最裡面'],
        blocks:[[rp(`${S('3')} + ${S('4')}`),'回報 7'],[rp(`${S('10')} − ${S('2.5')}`),'可以有小數'],[rp(`${S('6')} * ${S('7')}`),'乘號是 *'],[rp(`${S('7')} / ${S('2')}`),'回報 3.5']],
        code:{ py:`print(7 / 2)        # 3.5
 print(7 // 2)       # 3 整數除法
@@ -597,13 +597,13 @@ dice = random.randint(1, 6)`, js:`const dice = Math.floor(Math.random() * 6) + 1
        tip:'隨機位置別超出舞台範圍。',
        quest:{ q:`${rp(`隨機取數 ${S('1')} 到 ${S('6')}`)} 有幾種可能結果？`, a:['6','六'], hint:'數一數 1 到 6。' } },
      { id:'compare', name:'比較',
-       concept:['回報<b>布林值</b>：true / false','Scratch 只有 > < =','其他語言還有 >= <= !=','Scratch 比文字不分大小寫'],
+       concept:['回報<b>布林值</b>：true / false','Scratch 只有 > < =','沒有「大於等於」→ 用「不成立」組合','Scratch 比文字不分大小寫'],
        blocks:[[bo(`${S('10')} > ${S('9')}`),'true'],[bo(`${S('3')} < ${S('3')}`),'false'],[bo(`${S('apple')} = ${S('APPLE')}`),'true']],
        code:{ py:`print(10 > 9)      # True
 print("a" == "A")  # False，分大小寫
 print(5 != 3)      # True`, js:`console.log(3 >= 3);      // true
 console.log("a" === "A"); // false` },
-       oops:['Python、JS 比文字會分大小寫'],
+       oops:['「=」是比較，不是設定變數；要改變數請用「變數 設為」'],
        tip:'大於等於：「分數 < 60 不成立」。',
        quest:{ q:`${bo(`${S('Cat')} = ${S('cat')}`)} 回報 true 還是 false？`, a:['true','是','對'], hint:'Scratch 比文字在意大小寫嗎？' } },
      { id:'logic', name:'邏輯',
@@ -618,7 +618,7 @@ if (!gameOver) move();` },
        tip:'把條件唸出來，唸得通就對了。',
        quest:{ q:`${bo(`${bo(`${S('5')} > ${S('3')}`)} 且 ${bo(`${S('2')} > ${S('4')}`)}`)} 回報什麼？`, a:['false','否','錯'], hint:'兩邊分開判斷。' } },
      { id:'string', name:'字串',
-       concept:['文字 ＝ <b>字串</b>','可以接、量長度、取字、找字','Scratch 從第 1 字數，Python/JS 從 0'],
+       concept:['文字 ＝ <b>字串</b>','可以接、量長度、取字、找字','「第幾字」從 1 開始數'],
        blocks:[[rp(`字串組合 ${S('apple ')} ${S('banana')}`),'接起來'],[rp(`字串 ${S('apple')} 的第 ${S('1')} 字`),'a'],[rp(`字串 ${S('apple')} 的長度`),'5'],[bo(`字串 ${S('apple')} 包含 ${S('a')} ?`),'true']],
        code:{ py:`s = "apple"
 print(s[0], len(s), "a" in s)`, js:`const s = "apple";
@@ -632,26 +632,26 @@ console.log(s[0], s.length, s.includes("a"));` },
        code:{ py:`print(17 % 5)   # 2
 if n % 2 == 0:
     print("偶數")`, js:`console.log(17 % 5); // 2` },
-       oops:['Python round(2.5) 是 2，和 Scratch 不同'],
+       oops:['餘數積木的兩格順序不能放反：17 除以 5 和 5 除以 17 不一樣'],
        tip:'每 10 秒做一次：計時器 除以 10 的餘數 = 0',
        quest:{ q:`${rp(`${S('23')} 除以 ${S('4')} 的餘數`)} 回報多少？`, a:['3','三'], hint:'4 × 5 = 20。' } },
      { id:'func', name:'數學函式',
-       concept:['一顆積木、一個下拉選單','絕對值、捨去、進位、平方根、sin、cos…','其他語言放在 math / Math 裡'],
+       concept:['一顆積木、一個下拉選單','絕對值、捨去、進位、平方根、sin、cos…','選單裡換一個項目，就是不同的計算'],
        blocks:[[rp(`${D('絕對值')} 數值 ${S('-8')}`),'8'],[rp(`${D('無條件捨去')} 數值 ${S('3.9')}`),'3'],[rp(`${D('無條件進位')} 數值 ${S('3.1')}`),'4'],[rp(`${D('平方根')} 數值 ${S('16')}`),'4']],
        code:{ py:`import math
 math.floor(3.9); math.sqrt(16)`, js:`Math.floor(3.9); Math.sqrt(16);` },
-       oops:['Scratch 的 sin 用「度」，其他語言用「弧度」'],
+       oops:['平方根、sin 這類結果常有小數，要整數時再配「四捨五入」'],
        tip:'sin 90 ＝ 1，做繞圈動畫很方便。',
        quest:{ q:`${rp(`${D('平方根')} 數值 ${S('81')}`)} 回報多少？`, a:['9','九'], hint:'幾乘幾等於 81？' } },
    ] },
 
  { id:'vars', cat:'vars', name:'變數列表島', region:'寶盒大陸', mark:'crates',
    lead:'讓程式記住東西：變數是一個盒子，列表是一排盒子。',
-   learn:['變數','初始化','計數器','累加器','旗標','陣列與索引'],
+   learn:['變數','初始化','計數器','累加器','旗標','列表與編號'],
    sights:['寶盒倉庫：每個箱子都貼著名字','吊車：把值搬進搬出','編號貨架：一格一格排好的列表'],
    topics:[
      { id:'var', name:'變數',
-       concept:['變數 ＝ 有名字的盒子','三步驟：<b>建立 → 初始化 → 使用與更新</b>','<b>設為</b>：整個換掉（=）','<b>改變</b>：加減（+=）','所有角色可用 ＝ 全域變數（分數、關卡）','僅此角色 ＝ 區域變數（每隻敵人的血量）','取有意義的名字：分數、生命，不要 a、b'],
+       concept:['變數 ＝ 有名字的盒子','三步驟：<b>建立 → 初始化 → 使用與更新</b>','<b>設為</b>：整個換掉','<b>改變</b>：在原本的值上加減','所有角色可用 ＝ 全域變數（分數、關卡）','僅此角色 ＝ 區域變數（每隻敵人的血量）','取有意義的名字：分數、生命，不要 a、b'],
        blocks:[[setv('分數',S('0')),'整個換掉'],[chg('分數',S('1')),'加 1，負數就是減'],[v('分數'),'目前的值'],[st(`顯示變數 ${D('分數')}`),'顯示計分板']],
        example:{ script:[GO, setv('分數',S('0')), st(`顯示變數 ${D('分數')}`), '<div style="height:14px"></div>', hat('當角色被點擊','events'), chg('分數',S('1')), st(`播放音效 ${D('叮')}`,'sound'), st(`定位到 ${D('隨機位置')}`,'motion')],
          steps:['兩段程式組成「點點樂」','綠旗：分數設 0、顯示計分板','被點到：分數 +1、播音效、跳走','用「改變」，不是「設為」'] },
@@ -677,7 +677,7 @@ let temp = a; a = b; b = temp;` },
        tip:'主角死掉 → 旗標設 1 → 其他角色看到就停。',
        quest:{ q:`a = 3、b = 7，依序執行 ${setv('暫存',v('a'))} ${setv('a',v('b'))} ${setv('b',v('暫存'))}，b 是多少？`, a:['3','三'], hint:'暫存放的是 a 原本的值。' } },
      { id:'list', name:'列表',
-       concept:['列表 ＝ 一排有編號的盒子（<b>陣列</b>）','編號叫<b>索引</b>','Scratch 從 1 開始，Python/JS 從 <b>0</b>','<b>走訪</b>：迴圈 ＋ i，從第 1 項到最後','迴圈次數用「長度」，資料增減都不用改'],
+       concept:['列表 ＝ 一排有編號的盒子','編號叫<b>索引</b>','編號從 <b>1</b> 開始','<b>走訪</b>：迴圈 ＋ i，從第 1 項到最後','迴圈次數用「長度」，資料增減都不用改'],
        blocks:[[st(`添加 ${S('蘋果')} 到 ${D('水果')}`,'list'),'加在最後'],[st(`刪除 ${D('水果')} 的第 ${S('1')} 項`,'list'),'刪掉一項'],[st(`刪除 ${D('水果')} 的所有項目`,'list'),'清空'],[rp(`${D('水果')} 的第 ${S('1')} 項`,'list'),'讀出一項'],[rp(`${D('水果')} 的長度`,'list'),'幾筆'],[bo(`${D('水果')} 包含 ${S('蘋果')} ?`,'list'),'有沒有']],
        example:{ script:[GO, st(`刪除 ${D('水果')} 的所有項目`,'list'), st(`添加 ${S('蘋果')} 到 ${D('水果')}`,'list'), st(`添加 ${S('香蕉')} 到 ${D('水果')}`,'list'), setv('i',S('1')),
            REPEAT(rp(`${D('水果')} 的長度`,'list'), say(rp(`${D('水果')} 的第 ${v('i')} 項`,'list'),'1')+chg('i',S('1')))],
@@ -690,7 +690,7 @@ for f in fruits:
 fruits.push("芭樂");
 console.log(fruits[0]);
 for (const f of fruits) console.log(f);` },
-       oops:['綠旗沒清空 → 資料越玩越多','走訪時 i 從 0 開始（Scratch 要從 1）'],
+       oops:['綠旗沒清空 → 資料越玩越多','走訪時 i 要從 1 開始，不是 0'],
        tip:'隨機抽題：第 (隨機取數 1 到 長度) 項。',
        quest:{ q:`「水果」是：蘋果、香蕉、芭樂。${rp(`${D('水果')} 的第 ${S('2')} 項`,'list')} 是什麼？`, a:['香蕉'], hint:'Scratch 從 1 開始數。' } },
    ] },
@@ -701,7 +701,7 @@ for (const f of fruits) console.log(f);` },
    sights:['岔路路標：往左還是往右？','紅綠燈：條件成立才放行','柵欄關口：守衛檢查通行證'],
    topics:[
     { id:'if', name:'判斷',
-      concept:['<b>條件</b>：六角形積木，true / false','<b>單一判斷</b>：如果…那麼（if）','<b>二選一</b>：如果…否則（if / else）','<b>多選一</b>：否則裡再放如果（elif）','<b>多重條件</b>：且、或、不成立','由上往下檢查，第一個成立就執行','嚴格的條件放前面（> 89 在 > 59 前）'],
+      concept:['<b>條件</b>：六角形積木，true / false','<b>單一判斷</b>：如果…那麼','<b>二選一</b>：如果…否則','<b>多選一</b>：否則裡再放如果','<b>多重條件</b>：且、或、不成立','由上往下檢查，第一個成立就執行','嚴格的條件放前面（> 89 在 > 59 前）'],
       blocks:[[IF(B()),'成立才做'],[IF(B(),'',''),'二選一'],[st(`等待直到 ${B()}`),'等到成立'],[st(`停止 ${D('全部')}`),'結束程式']],
       example:{ script:[GO, st(`詢問 ${S('考幾分？')} 並等待`,'sensing'), setv('分數',rp('詢問的答案','sensing')),
           IF(gt(v('分數'),S('89')), say(S('優等')), IF(gt(v('分數'),S('59')), say(S('及格')), say(S('加油'))))],
@@ -746,7 +746,7 @@ function update() {
    ] },
 
  { id:'my', cat:'my', name:'函式積木島', region:'齒輪冰原', mark:'puzzle',
-   lead:'發明自己的積木：其他語言叫「函式」。',
+   lead:'發明自己的積木：把常用的一段程式包起來、取個名字。',
    learn:['函式','參數','模組化','拆解問題'],
    sights:['積木工廠：煙囪冒著煙','齒輪組：一個帶動一個','輸送帶：同一個模具做出不同大小的積木'],
    topics:[
@@ -794,7 +794,8 @@ const KEY='scratch-world-progress';
 let done={}; try{ done=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){ done={}; }
 const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(done)); }catch(e){} };
 const SEC_NAME={concept:'觀念',blocks:'積木',example:'範例程式',code:'程式對照',quest:'島長任務'};
-const secsOf=tp=>['concept','blocks',...(tp.example?['example']:[]),...(tp.code?['code']:[]),'quest'].filter(s=>s!=='concept'||tp.concept);
+const SHOW_CODE=false; // 七年級先不教文字程式語言
+const secsOf=tp=>['concept','blocks',...(tp.example?['example']:[]),...(SHOW_CODE&&tp.code?['code']:[]),'quest'].filter(s=>s!=='concept'||tp.concept);
 const ck=(it,tp,s)=>`${it.id}:${tp.id}:${s}`;
 function topicPct(it,tp){ const ss=secsOf(tp); return ss.filter(s=>done[ck(it,tp,s)]).length/ss.length; }
 function islandPct(it){ let a=0,b=0; it.topics.forEach(tp=>{ const ss=secsOf(tp); b+=ss.length; a+=ss.filter(s=>done[ck(it,tp,s)]).length; }); return b?a/b:0; }
@@ -984,7 +985,7 @@ function renderPanel(idx){
     <div data-sec="blocks">${h3('blocks',it.topics.length>1?tp.name+'的積木':'島上的積木')}
       <div class="blocks">${tp.blocks.map(([b,d])=>`<div class="brow">${b}<small>${d}</small></div>`).join('')}</div>${gotBtn('blocks',isDone('blocks'))}</div>
     ${tp.example?`<div data-sec="example">${h3('example')}<div class="script">${tp.example.script.join('')}</div><ol class="steps">${tp.example.steps.map(s=>`<li>${s}</li>`).join('')}</ol>${gotBtn('example',isDone('example'))}</div>`:''}
-    ${tp.code?`<div data-sec="code">${h3('code','換成文字程式語言')}<div class="codebox"><div class="langs" role="tablist"><button type="button" role="tab" data-l="py" aria-selected="${lang==='py'}">Python</button><button type="button" role="tab" data-l="js" aria-selected="${lang==='js'}">JavaScript</button></div><pre><code>${hl(tp.code[lang])}</code></pre></div>${gotBtn('code',isDone('code'))}</div>`:''}
+    ${SHOW_CODE&&tp.code?`<div data-sec="code">${h3('code','換成文字程式語言')}<div class="codebox"><div class="langs" role="tablist"><button type="button" role="tab" data-l="py" aria-selected="${lang==='py'}">Python</button><button type="button" role="tab" data-l="js" aria-selected="${lang==='js'}">JavaScript</button></div><pre><code>${hl(tp.code[lang])}</code></pre></div>${gotBtn('code',isDone('code'))}</div>`:''}
     ${tp.oops?`<div><h3>常見錯誤</h3><ul class="oops">${tp.oops.map(o=>`<li>${o}</li>`).join('')}</ul></div>`:''}
     <div class="tip"><b>小技巧</b>　${tp.tip}</div>
     <form class="quest" id="quest" data-sec="quest">
