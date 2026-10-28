@@ -1255,15 +1255,31 @@ function initThree(){
   })();
 
   // 航線：船貼著海面、熱氣球中空、飛機高空
-  const HEIGHT={ship:-.45,balloon:3.5,plane:7};
-  function legCurve(a,b,ride){
-    const A=groups[a].position, B=groups[b].position, dir=new THREE.Vector3(B.x-A.x,0,B.z-A.z).normalize();
-    const p0=new THREE.Vector3(A.x,0,A.z).addScaledVector(dir,groups[a].userData.ext*.85), p2=new THREE.Vector3(B.x,0,B.z).addScaledVector(dir,-groups[b].userData.ext*.85);
-    const y=HEIGHT[ride]; p0.y=p2.y=ride==='ship'?-.45:.6;
-    const mid=p0.clone().lerp(p2,.5); const perp=new THREE.Vector3(-dir.z,0,dir.x).multiplyScalar(ride==='ship'?p0.distanceTo(p2)*.18:0);
-    mid.add(perp); mid.y=ride==='ship'?-.45:y*2-.6;
-    return new THREE.QuadraticBezierCurve3(p0,mid,p2);
+  // 航線：水平方向是一條微彎的曲線，高度另外算——
+  //   船：一直貼著海面，從岸邊開到岸邊
+  //   飛機：從島上起飛，前 30% 平順爬升、中段平飛、後 30% 下降，降落在目的島上
+  //   熱氣球：從島上慢慢升空，飄過去再降落
+  const LAND=1.4;
+  class Leg extends THREE.Curve{
+    constructor(a,b,ride){
+      super(); this.ride=ride;
+      const A=groups[a].position, B=groups[b].position, dir=new THREE.Vector3(B.x-A.x,0,B.z-A.z).normalize();
+      const off=ride==='ship'?[groups[a].userData.ext*.85,groups[b].userData.ext*.85]:[Math.min(groups[a].userData.ext*.35,2.4),Math.min(groups[b].userData.ext*.35,2.4)];
+      this.P0=new THREE.Vector3(A.x,0,A.z).addScaledVector(dir,off[0]); this.P2=new THREE.Vector3(B.x,0,B.z).addScaledVector(dir,-off[1]);
+      const L=this.P0.distanceTo(this.P2);
+      this.C=this.P0.clone().lerp(this.P2,.5).add(new THREE.Vector3(-dir.z,0,dir.x).multiplyScalar(L*(ride==='ship'?.18:.08)));
+      this.H=ride==='plane'?6+L*.06:ride==='balloon'?3.5+L*.05:0;
+    }
+    getPoint(t,out=new THREE.Vector3()){
+      const u=1-t, P0=this.P0, C=this.C, P2=this.P2;
+      out.set(u*u*P0.x+2*u*t*C.x+t*t*P2.x, 0, u*u*P0.z+2*u*t*C.z+t*t*P2.z);
+      if(this.ride==='ship') out.y=-.45;
+      else if(this.ride==='plane'){ const lift=Math.max(0,Math.min(1,t/.3,(1-t)/.3)); out.y=LAND+this.H*Math.sin(lift*Math.PI/2); }
+      else out.y=LAND+this.H*Math.sin(Math.PI*t);
+      return out;
+    }
   }
+  const legCurve=(a,b,ride)=>new Leg(a,b,ride);
   const dotG=new THREE.SphereGeometry(.12,8,8), parked=[]; let trail=null;
   for(let i=0;i<groups.length-1;i++){
     const ride=ISLANDS[i].ride, c=legCurve(i,i+1,ride), len=c.getLength(), n=Math.round(len*1.6);
@@ -1383,8 +1399,9 @@ function initThree(){
       const u=Math.min(1,(t-trip.t0)/trip.dur), e=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
       if(trail) trail.g.children.forEach(d=>{ d.visible=d.userData.u<=e; });
       const p=trip.curve.getPoint(e); traveler.position.copy(p); if(trip.ride==='ship') traveler.position.y=-.55+Math.sin(t*4)*.05;
-      traveler.lookAt(trip.curve.getPoint(Math.min(1,e+.01)).setY(trip.ride==='ship'?traveler.position.y:trip.curve.getPoint(Math.min(1,e+.01)).y));
-      if(trip.ride==='plane') traveler.rotateZ(Math.sin(e*Math.PI)*.25);
+      { const ahead=trip.curve.getPoint(Math.min(1,e+.012)); if(trip.ride!=='plane') ahead.y=traveler.position.y;
+        if(ahead.distanceToSquared(traveler.position)>1e-6) traveler.lookAt(ahead); }
+      if(trip.ride==='plane'){ const cruise=Math.max(0,Math.min(1,e/.3,(1-e)/.3)); traveler.rotateZ(Math.sin(e*Math.PI*2)*.18*cruise); }
       goal.copy(p); goal.y=Math.max(0,p.y*.6);
       if(u>=1){ const to=trip.to; trip=null; if(trail) trail.fade=t; traveling=false; placeHero(to); traveler.visible=false; traveling=false; travelEl.hidden=true; arrive(to); }
     }
